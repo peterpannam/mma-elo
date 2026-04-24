@@ -10,10 +10,10 @@
 CREATE TABLE fighters (
   id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name           TEXT    NOT NULL,
-  weight_class   TEXT    NOT NULL,
   status         TEXT    NOT NULL DEFAULT 'active',
   nationality    TEXT,
   date_of_birth  DATE
+  -- no weight_class: a fighter's division is determined by their most recent fight
 );
 
 CREATE TABLE events (
@@ -37,13 +37,14 @@ CREATE TABLE fights (
 );
 
 CREATE TABLE elo_history (
-  id          UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
-  fighter_id  UUID    NOT NULL REFERENCES fighters(id),
-  fight_id    UUID    NOT NULL REFERENCES fights(id),
-  elo_before  NUMERIC NOT NULL,
-  elo_after   NUMERIC NOT NULL,
-  delta       NUMERIC NOT NULL,  -- stored explicitly for upset queries
-  date        DATE    NOT NULL
+  id           UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
+  fighter_id   UUID    NOT NULL REFERENCES fighters(id),
+  fight_id     UUID    NOT NULL REFERENCES fights(id),
+  weight_class TEXT    NOT NULL,
+  elo_before   NUMERIC NOT NULL,
+  elo_after    NUMERIC NOT NULL,
+  delta        NUMERIC NOT NULL,  -- stored explicitly for upset queries
+  date         DATE    NOT NULL
 );
 
 CREATE TABLE rankings (
@@ -59,12 +60,12 @@ CREATE TABLE rankings (
 -- Indexes
 -- ------------------------------------------------------------
 
-CREATE INDEX ON elo_history (fighter_id, date);
+CREATE INDEX ON elo_history (fighter_id, weight_class, date);  -- ELO lookups by fighter+division
 CREATE INDEX ON elo_history (fight_id);
 CREATE INDEX ON elo_history (delta);
+CREATE INDEX ON elo_history (weight_class, date);              -- divisional leaderboard queries
 CREATE INDEX ON rankings (valid_to);
 CREATE INDEX ON rankings (weight_class, valid_to);
-CREATE INDEX ON fighters (weight_class);
 
 -- ------------------------------------------------------------
 -- Row Level Security
