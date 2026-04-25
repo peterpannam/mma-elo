@@ -21,6 +21,7 @@ from scrape import fetch
 from transform import parse
 from load import load
 from elo import calculate
+from rankings import update as update_rankings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,7 +37,7 @@ log = logging.getLogger(__name__)
 if __name__ == "__main__":
     log.info("=== Weekly run started ===")
 
-    log.info("Step 1/4: Scraping new events, fights, and fighters from UFCStats.com...")
+    log.info("Step 1/5: Scraping new events, fights, and fighters from UFCStats.com...")
     scraped = fetch(DATA_DIR, all_events=False)
     log.info(
         "Scraped %d events, %d fights, %d fighters",
@@ -45,19 +46,26 @@ if __name__ == "__main__":
         len(scraped.fighters),
     )
 
-    log.info("Step 2/4: Transforming to schema...")
+    log.info("Step 2/5: Transforming to schema...")
     fighters, events, fights = parse(scraped.events, scraped.fights, scraped.fighters)
     log.info(
         "Parsed %d fighters, %d events, %d fights",
         len(fighters), len(events), len(fights),
     )
 
-    log.info("Step 3/4: Loading into Supabase...")
+    log.info("Step 3/5: Loading into Supabase...")
     db = get_client()
     load(db, fighters, events, fights)
 
-    log.info("Step 4/4: Calculating ELO history...")
+    log.info("Step 4/5: Calculating ELO history...")
     processed = calculate(db)
     log.info("ELO calculated for %d fights", processed)
+
+    log.info("Step 5/5: Updating rankings from UFC.com...")
+    result = update_rankings(db)
+    log.info(
+        "Rankings: %d new, %d closed, %d unmatched",
+        result["inserted"], result["closed"], result["unmatched"],
+    )
 
     log.info("=== Weekly run complete ===")
