@@ -41,9 +41,9 @@ class ParsedEvent:
 class ParsedFight:
     ufcstats_id: str
     ufcstats_event_id: str
-    fighter_1_name: str
-    fighter_2_name: str
-    winner_name: Optional[str]  # None → draw / no contest
+    fighter_1_ufcstats_id: str   # UFCStats hex fighter ID (not name)
+    fighter_2_ufcstats_id: str
+    winner_ufcstats_id: Optional[str]  # None → draw / no contest
     method: Optional[str]
     round: Optional[int]
     time: Optional[str]
@@ -55,7 +55,7 @@ class ParsedFight:
 # Helpers
 # ---------------------------------------------------------------------------
 
-_DRAW_MARKERS = {"draw", "nc", "no contest", ""}
+_NULL_WINNER_MARKERS = {"draw", "nc", "no contest", ""}
 
 
 def _str(val) -> str:
@@ -104,15 +104,15 @@ def parse(
             continue
 
         winner_raw = _str(row.winner).strip()
-        winner_name = None if winner_raw.lower() in _DRAW_MARKERS else winner_raw
+        winner_ufcstats_id = None if winner_raw.lower() in _NULL_WINNER_MARKERS else winner_raw
 
         finish_round = _str(row.finish_round)
         parsed_fights.append(ParsedFight(
             ufcstats_id=_str(row.fight_id),
             ufcstats_event_id=_str(row.event_id),
-            fighter_1_name=_str(row.fighter_1),
-            fighter_2_name=_str(row.fighter_2),
-            winner_name=winner_name,
+            fighter_1_ufcstats_id=_str(row.fighter_1),
+            fighter_2_ufcstats_id=_str(row.fighter_2),
+            winner_ufcstats_id=winner_ufcstats_id,
             method=_str(row.result) or None,
             round=int(finish_round) if finish_round.isdigit() else None,
             time=_str(row.finish_time) or None,

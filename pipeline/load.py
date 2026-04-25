@@ -20,13 +20,26 @@ from transform import ParsedFighter, ParsedEvent, ParsedFight
 
 log = logging.getLogger(__name__)
 
-# Supabase upsert batch size — keeps request payloads manageable
 _BATCH = 200
+_PAGE = 1000
 
 
 def _batched(items: list, size: int):
     for i in range(0, len(items), size):
         yield items[i : i + size]
+
+
+def _fetch_all(db: Client, table: str, select: str) -> list[dict]:
+    """Fetch all rows, handling Supabase's 1000-row default limit."""
+    rows: list[dict] = []
+    offset = 0
+    while True:
+        result = db.table(table).select(select).range(offset, offset + _PAGE - 1).execute()
+        rows.extend(result.data)
+        if len(result.data) < _PAGE:
+            break
+        offset += _PAGE
+    return rows
 
 
 # ---------------------------------------------------------------------------
@@ -38,8 +51,8 @@ def upsert_fighters(
     fighters: list[ParsedFighter],
 ) -> dict[str, str]:
     """
-    Upsert fighters and return {fighter_name: our_uuid}.
-    Used downstream to resolve fighter names in fight rows.
+    Upsert fighters and return {ufcstats_fighter_id: our_uuid}.
+    Used downstream to resolve fighter IDs in fight rows.
     """
     rows = [
         {
@@ -56,9 +69,9 @@ def upsert_fighters(
 
     log.info("Upserted %d fighters", len(rows))
 
-    # Fetch back to get DB-generated UUIDs
-    result = db.table("fighters").select("id, name, ufcstats_id").execute()
-    return {row["name"]: row["id"] for row in result.data}
+    # Fetch back all rows to get DB-generated UUIDs keyed by UFCStats fighter ID
+    rows = _fetch_all(db, "fighters", "id, ufcstats_id")
+    return {row["ufcstats_id"]: row["id"] for row in rows if row["ufcstats_id"]}
 
 
 # ---------------------------------------------------------------------------
@@ -88,8 +101,8 @@ def upsert_events(
 
     log.info("Upserted %d events", len(rows))
 
-    result = db.table("events").select("id, ufcstats_id").execute()
-    return {row["ufcstats_id"]: row["id"] for row in result.data}
+    rows = _fetch_all(db, "events", "id, ufcstats_id")
+    return {row["ufcstats_id"]: row["id"] for row in rows if row["ufcstats_id"]}
 
 
 # ---------------------------------------------------------------------------
@@ -99,43 +112,39 @@ def upsert_events(
 def upsert_fights(
     db: Client,
     fights: list[ParsedFight],
-    name_to_uuid: dict[str, str],
+    fighter_id_to_uuid: dict[str, str],
     event_id_to_uuid: dict[str, str],
 ) -> list[str]:
     """
-    Upsert fights and return list of newly inserted fight UUIDs (for ELO step).
-
-    Fights where fighter UUIDs or event UUID cannot be resolved are skipped
-    with a warning — this can happen if a fighter profile page hasn't been
-    scraped yet (rare but possible on first run).
+    Upsert fights. fighter_id_to_uuid maps UFCStats fighter hex IDs → our UUIDs.
     """
     rows = []
     skipped = 0
 
     for fight in fights:
-        fighter_a_id = name_to_uuid.get(fight.fighter_1_name)
-        fighter_b_id = name_to_uuid.get(fight.fighter_2_name)
+        fighter_a_id = fighter_id_to_uuid.get(fight.fighter_1_ufcstats_id)
+        fighter_b_id = fighter_id_to_uuid.get(fight.fighter_2_ufcstats_id)
         event_uuid = event_id_to_uuid.get(fight.ufcstats_event_id)
 
         if not fighter_a_id or not fighter_b_id or not event_uuid:
             log.warning(
-                "Skipping fight %s — could not resolve: fighter_1=%s (%s) "
-                "fighter_2=%s (%s) event=%s (%s)",
+                "Skipping fight %s — could not resolve: "
+                "fighter_1=%s (%s) fighter_2=%s (%s) event=%s (%s)",
                 fight.ufcstats_id,
-                fight.fighter_1_name, fighter_a_id,
-                fight.fighter_2_name, fighter_b_id,
+                fight.fighter_1_ufcstats_id, fighter_a_id,
+                fight.fighter_2_ufcstats_id, fighter_b_id,
                 fight.ufcstats_event_id, event_uuid,
             )
             skipped += 1
             continue
 
         winner_id: Optional[str] = None
-        if fight.winner_name:
-            winner_id = name_to_uuid.get(fight.winner_name)
+        if fight.winner_ufcstats_id:
+            winner_id = fighter_id_to_uuid.get(fight.winner_ufcstats_id)
             if not winner_id:
                 log.warning(
-                    "Fight %s: winner name %r not in fighter map — storing NULL",
-                    fight.ufcstats_id, fight.winner_name,
+                    "Fight %s: winner UFCStats ID %r not in fighter map — storing NULL",
+                    fight.ufcstats_id, fight.winner_ufcstats_id,
                 )
 
         rows.append({
@@ -177,7 +186,7 @@ def load(
     """
     Run the full upsert sequence. Returns fight UUIDs for the ELO calculation step.
     """
-    name_to_uuid = upsert_fighters(db, fighters)
+    fighter_id_to_uuid = upsert_fighters(db, fighters)
     event_id_to_uuid = upsert_events(db, events)
-    fight_ids = upsert_fights(db, fights, name_to_uuid, event_id_to_uuid)
+    fight_ids = upsert_fights(db, fights, fighter_id_to_uuid, event_id_to_uuid)
     return fight_ids

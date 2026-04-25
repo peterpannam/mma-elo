@@ -27,12 +27,15 @@ def fetch(data_dir: Path, all_events: bool = False) -> ScrapedData:
     # worker_constructor closure. On Linux (GitHub Actions) this could be raised safely.
     event_scraper = EventScraper(data_folder=data_dir, n_sessions=1, delay=0.3)
     event_scraper.scrape_events()
+    event_scraper.load_data()  # scraper.data is set at __init__ and not refreshed after scraping
 
     fight_scraper = FightScraper(data_folder=data_dir, n_sessions=1, delay=0.3)
     fight_scraper.scrape_fights(get_all_events=all_events)
+    fight_scraper.load_data()
 
     fighter_scraper = FighterScraper(data_folder=data_dir, n_sessions=1, delay=0.3)
     fighter_scraper.scrape_fighters()
+    fighter_scraper.load_data()
     fighter_scraper.add_name_column()
 
     return ScrapedData(
