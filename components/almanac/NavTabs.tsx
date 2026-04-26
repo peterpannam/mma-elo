@@ -16,7 +16,7 @@ export default function NavTabs() {
   const pathname = usePathname()
 
   return (
-    <nav className="flex gap-5 overflow-x-auto">
+    <nav className="flex gap-5 overflow-x-auto max-w-480 mx-auto px-4 sm:px-6">
       {TABS.map(({ href, label }) => {
         const active = pathname === href || pathname.startsWith(href + '/')
         return (
@@ -25,7 +25,7 @@ export default function NavTabs() {
             href={href}
             className={[
               'font-mono text-[11px] tracking-widest uppercase whitespace-nowrap',
-              'pb-3 pt-2 border-b-2 transition-colors',
+              'pb-3 pt-3 border-b-2 transition-colors',
               active
                 ? 'border-accent text-accent'
                 : 'border-transparent text-muted hover:text-ink hover:border-rule',

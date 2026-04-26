@@ -23,12 +23,12 @@ const sourceSerif = Source_Serif_4({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s — The ELO Almanac',
-    default: 'The ELO Almanac',
+    template: '%s — MMA ELO',
+    default: 'MMA ELO',
   },
   description: 'UFC fighter ELO ratings — 30 years of history, one number per fighter.',
   openGraph: {
-    siteName: 'The ELO Almanac',
+    siteName: 'MMA ELO',
     type: 'website',
   },
   twitter: {
@@ -44,9 +44,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
         {/* Masthead */}
-        <header className="border-b-2 border-ink">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-5 pb-0">
-            <div className="flex items-start justify-between pb-4 mb-0 border-b border-rule">
+        <header className="border-b-2 border-rule ">
+          <div className="pb-4 mb-0 border-b-4 border-double border-ink">
+            <div className="max-w-480 mx-auto px-4 sm:px-6 pt-5 flex items-start justify-between pb-0">
               <div>
                 <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-muted mb-1">
                   UFC Fighter Ratings · Updated weekly
@@ -55,23 +55,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   style={{ fontFamily: 'var(--font-playfair)' }}
                   className="text-4xl sm:text-5xl font-black tracking-tight text-ink leading-none"
                 >
-                  THE ELO ALMANAC
+                  MMA ELO
                 </h1>
                 <p className="font-sans text-sm text-muted mt-1.5">
                   Algorithmic rankings from 30 years of UFC history
                 </p>
               </div>
             </div>
-            <NavTabs />
           </div>
+          <NavTabs />
         </header>
 
-        <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-8">
+        <main className="flex-1 max-w-480 mx-auto w-full px-4 sm:px-6 py-8">
           {children}
         </main>
 
         <footer className="border-t border-rule mt-auto">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
+          <div className="max-w-480 mx-auto px-4 sm:px-6 py-4">
             <p className="font-mono text-[10px] text-muted tracking-wider">
               Data via UFCStats.com · Rankings via UFC.com · ELO calculated with K=40 base
             </p>
