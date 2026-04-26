@@ -8,6 +8,7 @@ export interface Fighter {
 export interface CurrentElo {
   fighter_id: string
   fighter_name: string
+  fighter_status: 'active' | 'inactive'
   weight_class: string
   elo: number
   date: string
@@ -27,6 +28,9 @@ export interface EloHistoryEntry {
 }
 
 export interface EloHistoryWithFight extends EloHistoryEntry {
+  p4p_elo_before: number | null
+  p4p_elo_after: number | null
+  p4p_delta: number | null
   fight: {
     id: string
     winner_id: string | null
@@ -68,6 +72,16 @@ export interface Ranking {
   rank: number
   valid_from: string
   valid_to: string | null
+}
+
+export interface CurrentP4P {
+  fighter_id: string
+  fighter_name: string
+  fighter_status: 'active' | 'inactive'
+  elo: number
+  date: string
+  fight_id: string
+  delta: number
 }
 
 export interface DivisionTrend {

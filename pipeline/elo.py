@@ -126,11 +126,18 @@ def calculate(db: Client) -> int:
     done_fight_ids: set[str] = {row["fight_id"] for row in existing}
 
     # --- Build current ELO state from existing history ---
-    # Sorted by date already (append-only), so last row per key is most recent
-    history = _fetch_all(db, "elo_history", "fighter_id, weight_class, elo_after, date", order="date")
+    # Sorted by date (append-only), so last row per key is most recent
+    history = _fetch_all(
+        db, "elo_history",
+        "fighter_id, weight_class, elo_after, p4p_elo_after, date",
+        order="date",
+    )
     elo_state: dict[tuple[str, str], float] = {}
+    p4p_state: dict[str, float] = {}
     for row in history:
         elo_state[(row["fighter_id"], row["weight_class"])] = row["elo_after"]
+        if row.get("p4p_elo_after") is not None:
+            p4p_state[row["fighter_id"]] = row["p4p_elo_after"]
 
     # --- Process unprocessed fights ---
     batch: list[dict] = []
@@ -149,32 +156,43 @@ def calculate(db: Client) -> int:
 
         elo_a = elo_state.get((a_id, wc), INITIAL_ELO)
         elo_b = elo_state.get((b_id, wc), INITIAL_ELO)
+        p4p_a = p4p_state.get(a_id, INITIAL_ELO)
+        p4p_b = p4p_state.get(b_id, INITIAL_ELO)
 
         result = _classify_result(fight.get("winner_id"), a_id, b_id, method)
         k = _k_factor(method)
-        new_a, new_b = _update_elo(elo_a, elo_b, k, result)
+        new_a,     new_b     = _update_elo(elo_a, elo_b, k, result)
+        new_p4p_a, new_p4p_b = _update_elo(p4p_a, p4p_b, k, result)
 
         batch.append({
-            "fighter_id": a_id,
-            "fight_id": fid,
-            "weight_class": wc,
-            "elo_before": elo_a,
-            "elo_after": new_a,
-            "delta": round(new_a - elo_a, 2),
-            "date": date,
+            "fighter_id":     a_id,
+            "fight_id":       fid,
+            "weight_class":   wc,
+            "elo_before":     elo_a,
+            "elo_after":      new_a,
+            "delta":          round(new_a - elo_a, 2),
+            "date":           date,
+            "p4p_elo_before": p4p_a,
+            "p4p_elo_after":  new_p4p_a,
+            "p4p_delta":      round(new_p4p_a - p4p_a, 2),
         })
         batch.append({
-            "fighter_id": b_id,
-            "fight_id": fid,
-            "weight_class": wc,
-            "elo_before": elo_b,
-            "elo_after": new_b,
-            "delta": round(new_b - elo_b, 2),
-            "date": date,
+            "fighter_id":     b_id,
+            "fight_id":       fid,
+            "weight_class":   wc,
+            "elo_before":     elo_b,
+            "elo_after":      new_b,
+            "delta":          round(new_b - elo_b, 2),
+            "date":           date,
+            "p4p_elo_before": p4p_b,
+            "p4p_elo_after":  new_p4p_b,
+            "p4p_delta":      round(new_p4p_b - p4p_b, 2),
         })
 
         elo_state[(a_id, wc)] = new_a
         elo_state[(b_id, wc)] = new_b
+        p4p_state[a_id] = new_p4p_a
+        p4p_state[b_id] = new_p4p_b
         processed += 1
 
         # Flush in batches of 200 pairs (400 rows)

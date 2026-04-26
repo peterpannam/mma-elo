@@ -1,29 +1,41 @@
 'use client'
 
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { WEIGHT_CLASSES, WEIGHT_CLASS_ABBR } from './Atoms'
+
+const ALL_OPTIONS = ['P4P', ...WEIGHT_CLASSES] as const
 
 export default function DivisionPicker({ current }: { current: string }) {
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  function navigate(wc: string) {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('wc', wc)
+    router.push(`${pathname}?${params.toString()}`)
+  }
 
   return (
     <div className="flex flex-wrap gap-1.5">
-      {WEIGHT_CLASSES.map(wc => {
+      {ALL_OPTIONS.map(wc => {
         const active = current === wc
+        const label = wc === 'P4P' ? 'P4P' : (WEIGHT_CLASS_ABBR[wc] ?? wc)
         return (
           <button
             key={wc}
-            onClick={() => router.push(`${pathname}?wc=${encodeURIComponent(wc)}`)}
+            onClick={() => navigate(wc)}
             className={[
               'font-mono text-[10px] tracking-wider uppercase px-2.5 py-1',
               'border transition-colors rounded-sm',
               active
                 ? 'bg-ink text-paper border-ink'
-                : 'bg-transparent text-muted border-rule hover:border-ink hover:text-ink',
+                : wc === 'P4P'
+                  ? 'bg-transparent text-accent border-accent hover:bg-accent hover:text-paper'
+                  : 'bg-transparent text-muted border-rule hover:border-ink hover:text-ink',
             ].join(' ')}
           >
-            {WEIGHT_CLASS_ABBR[wc] ?? wc}
+            {label}
           </button>
         )
       })}

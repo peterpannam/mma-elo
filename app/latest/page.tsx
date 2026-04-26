@@ -1,6 +1,22 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getLatestEvent } from '@/lib/queries'
 import { Kicker, SectionHeader, MethodBadge, Delta } from '@/components/almanac/Atoms'
+
+export const revalidate = 3600
+
+export async function generateMetadata(): Promise<Metadata> {
+  const result = await getLatestEvent()
+  const eventName = result?.event?.name ?? 'Latest Event'
+  const title = eventName
+  const description = `ELO changes from ${eventName}. See how every fighter's rating moved after the event.`
+  return {
+    title,
+    description,
+    openGraph: { title: `${title} — The ELO Almanac`, description },
+    twitter: { title: `${title} — The ELO Almanac`, description },
+  }
+}
 
 export default async function LatestEventPage() {
   let result: Awaited<ReturnType<typeof getLatestEvent>> = null

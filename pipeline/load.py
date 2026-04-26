@@ -177,6 +177,12 @@ def upsert_fights(
 # Orchestrator
 # ---------------------------------------------------------------------------
 
+def refresh_active_status(db: Client) -> None:
+    """Re-derive fighter active/inactive status from last fight date."""
+    db.rpc("refresh_fighter_status").execute()
+    log.info("Refreshed fighter active status")
+
+
 def load(
     db: Client,
     fighters: list[ParsedFighter],
@@ -189,4 +195,5 @@ def load(
     fighter_id_to_uuid = upsert_fighters(db, fighters)
     event_id_to_uuid = upsert_events(db, events)
     fight_ids = upsert_fights(db, fights, fighter_id_to_uuid, event_id_to_uuid)
+    refresh_active_status(db)
     return fight_ids

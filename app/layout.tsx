@@ -22,8 +22,18 @@ const sourceSerif = Source_Serif_4({
 })
 
 export const metadata: Metadata = {
-  title: 'The ELO Almanac',
+  title: {
+    template: '%s — The ELO Almanac',
+    default: 'The ELO Almanac',
+  },
   description: 'UFC fighter ELO ratings — 30 years of history, one number per fighter.',
+  openGraph: {
+    siteName: 'The ELO Almanac',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import type { CurrentElo } from '@/lib/types'
+import type { CurrentElo, CurrentP4P } from '@/lib/types'
+
+type Row = CurrentElo | CurrentP4P
 import { Delta, WEIGHT_CLASS_ABBR } from './Atoms'
 
 type SortKey = 'elo' | 'delta' | 'date'
@@ -11,7 +13,7 @@ export default function LeaderboardTable({
   rows,
   showWeightClass = false,
 }: {
-  rows: CurrentElo[]
+  rows: Row[]
   showWeightClass?: boolean
 }) {
   const [sortKey, setSortKey] = useState<SortKey>('elo')
@@ -63,7 +65,7 @@ export default function LeaderboardTable({
         <tbody>
           {sorted.map((row, i) => (
             <tr
-              key={`${row.fighter_id}-${row.weight_class}`}
+              key={`${row.fighter_id}-${'weight_class' in row ? row.weight_class : 'p4p'}`}
               className="border-b border-rule hover:bg-surface transition-colors"
             >
               <td className="py-2.5 font-mono text-xs text-muted w-10">
@@ -80,7 +82,9 @@ export default function LeaderboardTable({
               {showWeightClass && (
                 <td className="py-2.5 pl-3 pr-3">
                   <span className="font-mono text-[10px] text-muted">
-                    {WEIGHT_CLASS_ABBR[row.weight_class] ?? row.weight_class}
+                    {'weight_class' in row
+                      ? (WEIGHT_CLASS_ABBR[row.weight_class] ?? row.weight_class)
+                      : 'P4P'}
                   </span>
                 </td>
               )}

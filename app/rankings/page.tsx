@@ -1,8 +1,27 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getRankingsWithElo } from '@/lib/queries'
 import { Kicker, SectionHeader, WEIGHT_CLASS_ABBR } from '@/components/almanac/Atoms'
 import DivisionPicker from '@/components/almanac/DivisionPicker'
 import type { CurrentElo } from '@/lib/types'
+
+export const revalidate = 3600
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ wc?: string }>
+}): Promise<Metadata> {
+  const { wc = 'Middleweight' } = await searchParams
+  const title = `${wc}: ELO vs UFC Rankings`
+  const description = `Compare official UFC ${wc} rankings against algorithmic ELO ratings. See which fighters are being snubbed.`
+  return {
+    title,
+    description,
+    openGraph: { title: `${title} — The ELO Almanac`, description },
+    twitter: { title: `${title} — The ELO Almanac`, description },
+  }
+}
 
 export default async function RankingsPage({
   searchParams,

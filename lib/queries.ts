@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 import type {
   CurrentElo,
+  CurrentP4P,
   DivisionTrend,
   EloHistoryWithFight,
   Event,
@@ -8,15 +9,32 @@ import type {
   Ranking,
 } from './types'
 
-export async function getLeaderboard(weightClass: string): Promise<CurrentElo[]> {
+export async function getLeaderboard(
+  weightClass: string,
+  mode: 'active' | 'all' = 'active',
+): Promise<CurrentElo[]> {
+  const table = mode === 'active' ? 'active_elo' : 'current_elo'
   const { data, error } = await supabase
-    .from('current_elo')
+    .from(table)
     .select('*')
     .eq('weight_class', weightClass)
     .order('elo', { ascending: false })
     .limit(200)
   if (error) throw error
   return data as CurrentElo[]
+}
+
+export async function getP4PLeaderboard(
+  mode: 'active' | 'all' = 'active',
+): Promise<CurrentP4P[]> {
+  const table = mode === 'active' ? 'active_p4p' : 'current_p4p'
+  const { data, error } = await supabase
+    .from(table)
+    .select('*')
+    .order('elo', { ascending: false })
+    .limit(200)
+  if (error) throw error
+  return data as CurrentP4P[]
 }
 
 export async function getAllFighters(): Promise<Pick<Fighter, 'id' | 'name'>[]> {
@@ -27,6 +45,16 @@ export async function getAllFighters(): Promise<Pick<Fighter, 'id' | 'name'>[]> 
     .limit(5000)
   if (error) throw error
   return data as Pick<Fighter, 'id' | 'name'>[]
+}
+
+export async function getFighterP4P(id: string): Promise<CurrentP4P | null> {
+  const { data, error } = await supabase
+    .from('current_p4p')
+    .select('*')
+    .eq('fighter_id', id)
+    .single()
+  if (error) return null
+  return data as CurrentP4P
 }
 
 export async function getFighter(id: string): Promise<Fighter | null> {
@@ -53,7 +81,7 @@ export async function getFighterHistory(fighterId: string): Promise<EloHistoryWi
   const { data, error } = await supabase
     .from('elo_history')
     .select(`
-      id, fighter_id, weight_class, fight_id, elo_before, elo_after, delta, date,
+      id, fighter_id, weight_class, fight_id, elo_before, elo_after, delta, date, p4p_elo_before, p4p_elo_after, p4p_delta,
       fight:fight_id (
         id, winner_id, method, round, time, weight_class, is_title_fight,
         fighter_a:fighter_a_id ( id, name ),
@@ -140,7 +168,7 @@ export async function getRankingsWithElo(weightClass: string): Promise<{
       .is('valid_to', null)
       .order('rank'),
     supabase
-      .from('current_elo')
+      .from('active_elo')
       .select('*')
       .eq('weight_class', weightClass)
       .order('elo', { ascending: false })

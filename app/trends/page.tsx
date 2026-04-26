@@ -1,7 +1,23 @@
+import type { Metadata } from 'next'
 import { getDivisionTrends } from '@/lib/queries'
 import { Kicker, SectionHeader, DIVISION_COLORS, WEIGHT_CLASS_ABBR } from '@/components/almanac/Atoms'
 import TrendsChart from '@/components/almanac/TrendsChart'
 import type { DivisionTrend } from '@/lib/types'
+
+export const revalidate = 3600
+
+export const metadata: Metadata = {
+  title: 'Division Trends',
+  description: 'Monthly average ELO per UFC weight class over time. See which divisions are getting stronger.',
+  openGraph: {
+    title: 'Division Trends — The ELO Almanac',
+    description: 'Monthly average ELO per UFC weight class over time. See which divisions are getting stronger.',
+  },
+  twitter: {
+    title: 'Division Trends — The ELO Almanac',
+    description: 'Monthly average ELO per UFC weight class over time. See which divisions are getting stronger.',
+  },
+}
 
 export default async function TrendsPage() {
   let trends: DivisionTrend[] = []

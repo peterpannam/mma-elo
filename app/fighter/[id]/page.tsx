@@ -1,10 +1,31 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getFighter, getFighterCurrentElos, getFighterHistory } from '@/lib/queries'
+import { getFighter, getFighterCurrentElos, getFighterHistory, getFighterP4P } from '@/lib/queries'
 import { Kicker, Delta, MethodBadge, WEIGHT_CLASS_ABBR, FormDots, HairlineRule } from '@/components/almanac/Atoms'
 import LineChart from '@/components/almanac/LineChart'
 import type { ChartSeries } from '@/components/almanac/LineChart'
 import { DIVISION_COLORS } from '@/components/almanac/Atoms'
+
+export const revalidate = 3600
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const fighter = await getFighter(id)
+  if (!fighter) return { title: 'Fighter Not Found' }
+  const title = fighter.name
+  const description = `${fighter.name} UFC ELO rating, career fight log, and historical ELO chart.`
+  return {
+    title,
+    description,
+    openGraph: { title: `${title} — The ELO Almanac`, description },
+    twitter: { title: `${title} — The ELO Almanac`, description },
+  }
+}
 
 export default async function FighterProfilePage({
   params,
@@ -13,10 +34,11 @@ export default async function FighterProfilePage({
 }) {
   const { id } = await params
 
-  const [fighter, currentElos, history] = await Promise.all([
+  const [fighter, currentElos, history, p4p] = await Promise.all([
     getFighter(id),
     getFighterCurrentElos(id),
     getFighterHistory(id),
+    getFighterP4P(id),
   ])
 
   if (!fighter) notFound()
@@ -44,13 +66,25 @@ export default async function FighterProfilePage({
   // Last-5 deltas across all weight classes combined, most-recent first
   const last5Deltas = history.slice(0, 5).map(e => e.delta)
 
-  // Format DOB and age
-  let dob = ''
-  let age = ''
-  if (fighter.date_of_birth) {
-    dob = fighter.date_of_birth
-    const diff = Date.now() - new Date(fighter.date_of_birth).getTime()
-    age = ` · Age ${Math.floor(diff / (365.25 * 24 * 3600 * 1000))}`
+  const dob = fighter.date_of_birth ?? ''
+
+  // Build P4P chart series from history if data exists
+  const p4pPoints = history
+    .filter(e => e.p4p_elo_after != null)
+    .sort((a, b) => (a.date < b.date ? -1 : 1))
+    .map(e => ({
+      x: new Date(e.date).getTime(),
+      y: e.p4p_elo_after as number,
+      label: `${e.date}: P4P ${Math.round(e.p4p_elo_after as number)} (${(e.p4p_delta ?? 0) > 0 ? '+' : ''}${Math.round(e.p4p_delta ?? 0)})`,
+    }))
+
+  if (p4pPoints.length > 0) {
+    chartSeries.push({
+      id: 'p4p',
+      name: 'P4P',
+      color: '#5c7ba8',
+      points: p4pPoints,
+    })
   }
 
   return (
@@ -66,12 +100,23 @@ export default async function FighterProfilePage({
         </h1>
         <p className="font-mono text-xs text-muted mt-1.5">
           {fighter.nationality ?? 'Unknown nationality'}
-          {dob ? ` · DOB ${dob}${age}` : ''}
+          {dob ? ` · DOB ${dob}` : ''}
         </p>
 
         {/* Current ELOs */}
-        {currentElos.length > 0 && (
+        {(currentElos.length > 0 || p4p) && (
           <div className="flex flex-wrap gap-3 mt-4">
+            {p4p && (
+              <div className="border border-[#5c7ba8] rounded-sm px-3 py-2 bg-surface">
+                <p className="font-mono text-[10px] tracking-widest uppercase" style={{ color: '#5c7ba8' }}>
+                  P4P
+                </p>
+                <p className="font-mono text-lg font-semibold text-ink leading-tight">
+                  {Math.round(p4p.elo)}
+                </p>
+                <Delta value={p4p.delta} />
+              </div>
+            )}
             {currentElos.map(e => (
               <div
                 key={e.weight_class}
@@ -114,78 +159,91 @@ export default async function FighterProfilePage({
 
       <HairlineRule className="mb-8" />
 
-      {/* Fight Log */}
-      <div>
-        <p className="font-mono text-[10px] tracking-widest uppercase text-muted mb-4">
+      {/* Fight Log — one table per weight class */}
+      <div className="space-y-10">
+        <p className="font-mono text-[10px] tracking-widest uppercase text-muted">
           Fight Log ({history.length} fights)
         </p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="border-b-2 border-ink">
-                <th className="pb-2 text-left font-mono text-[10px] tracking-widest uppercase text-muted">Date</th>
-                <th className="pb-2 text-left font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Event</th>
-                <th className="pb-2 text-left font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Opponent</th>
-                <th className="pb-2 text-left font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Div</th>
-                <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Result</th>
-                <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Method</th>
-                <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted pl-3">ELO</th>
-                <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Δ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map(entry => {
-                const fight = entry.fight
-                if (!fight) return null
+        {Object.entries(byWc)
+          .sort(([, a], [, b]) => {
+            const latestA = Math.max(...a.map(e => new Date(e.date).getTime()))
+            const latestB = Math.max(...b.map(e => new Date(e.date).getTime()))
+            return latestB - latestA
+          })
+          .map(([wc, entries]) => {
+            const sorted = [...entries].sort((a, b) => (a.date < b.date ? 1 : -1))
+            return (
+              <div key={wc}>
+                <p className="font-mono text-xs font-semibold text-ink mb-3">
+                  {WEIGHT_CLASS_ABBR[wc] ?? wc}
+                  <span className="font-normal text-muted ml-2">({sorted.length} fights)</span>
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b-2 border-ink">
+                        <th className="pb-2 text-left font-mono text-[10px] tracking-widest uppercase text-muted">Date</th>
+                        <th className="pb-2 text-left font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Event</th>
+                        <th className="pb-2 text-left font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Opponent</th>
+                        <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Result</th>
+                        <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Method</th>
+                        <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted pl-3">ELO</th>
+                        <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Δ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sorted.map(entry => {
+                        const fight = entry.fight
+                        if (!fight) return null
 
-                const isA = fight.fighter_a.id === id
-                const opponent = isA ? fight.fighter_b : fight.fighter_a
-                const won = fight.winner_id === id
-                const nc = fight.winner_id === null
+                        const isA = fight.fighter_a.id === id
+                        const opponent = isA ? fight.fighter_b : fight.fighter_a
+                        const won = fight.winner_id === id
+                        const nc = fight.winner_id === null
 
-                return (
-                  <tr key={entry.id} className="border-b border-rule hover:bg-surface transition-colors">
-                    <td className="py-2.5 font-mono text-xs text-muted whitespace-nowrap">{fight.event?.date ?? entry.date}</td>
-                    <td className="py-2.5 pl-3 font-mono text-xs text-muted max-w-[160px] truncate">
-                      {fight.event?.name ?? '—'}
-                    </td>
-                    <td className="py-2.5 pl-3">
-                      <Link
-                        href={`/fighter/${opponent.id}`}
-                        className="font-sans font-semibold text-ink hover:text-accent transition-colors text-sm"
-                      >
-                        {opponent.name}
-                      </Link>
-                    </td>
-                    <td className="py-2.5 pl-3 font-mono text-[10px] text-muted whitespace-nowrap">
-                      {WEIGHT_CLASS_ABBR[entry.weight_class] ?? entry.weight_class}
-                    </td>
-                    <td className="py-2.5 pl-3 text-right">
-                      <span
-                        className="font-mono text-xs font-semibold"
-                        style={{ color: nc ? '#7a7065' : won ? '#2f6b3a' : '#a82e1c' }}
-                      >
-                        {nc ? 'NC' : won ? 'W' : 'L'}
-                      </span>
-                    </td>
-                    <td className="py-2.5 pl-3 text-right">
-                      <MethodBadge method={fight.method} />
-                      {fight.round && (
-                        <span className="font-mono text-[10px] text-muted ml-1">R{fight.round}</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 pl-3 text-right font-mono text-xs text-ink">
-                      {Math.round(entry.elo_after)}
-                    </td>
-                    <td className="py-2.5 pl-3 text-right">
-                      <Delta value={entry.delta} />
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                        return (
+                          <tr key={entry.id} className="border-b border-rule hover:bg-surface transition-colors">
+                            <td className="py-2.5 font-mono text-xs text-muted whitespace-nowrap">{fight.event?.date ?? entry.date}</td>
+                            <td className="py-2.5 pl-3 font-mono text-xs text-muted max-w-[160px] truncate">
+                              {fight.event?.name ?? '—'}
+                            </td>
+                            <td className="py-2.5 pl-3">
+                              <Link
+                                href={`/fighter/${opponent.id}`}
+                                className="font-sans font-semibold text-ink hover:text-accent transition-colors text-sm"
+                              >
+                                {opponent.name}
+                              </Link>
+                            </td>
+                            <td className="py-2.5 pl-3 text-right">
+                              <span
+                                className="font-mono text-xs font-semibold"
+                                style={{ color: nc ? '#7a7065' : won ? '#2f6b3a' : '#a82e1c' }}
+                              >
+                                {nc ? 'NC' : won ? 'W' : 'L'}
+                              </span>
+                            </td>
+                            <td className="py-2.5 pl-3 text-right">
+                              <MethodBadge method={fight.method} />
+                              {fight.round && (
+                                <span className="font-mono text-[10px] text-muted ml-1">R{fight.round}</span>
+                              )}
+                            </td>
+                            <td className="py-2.5 pl-3 text-right font-mono text-xs text-ink">
+                              {Math.round(entry.elo_after)}
+                            </td>
+                            <td className="py-2.5 pl-3 text-right">
+                              <Delta value={entry.delta} />
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )
+          })}
       </div>
     </div>
   )
