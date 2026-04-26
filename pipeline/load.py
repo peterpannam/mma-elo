@@ -161,6 +161,7 @@ def upsert_fights(
             "time": fight.time,
             "weight_class": fight.weight_class,
             "is_title_fight": fight.is_title_fight,
+            "card_position": fight.card_position,
         })
 
     inserted_ids: list[str] = []

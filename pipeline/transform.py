@@ -52,6 +52,7 @@ class ParsedFight:
     time: Optional[str]
     weight_class: str
     is_title_fight: bool
+    card_position: int  # 0 = first fight of night (early prelim), max = main event
 
 
 # ---------------------------------------------------------------------------
@@ -104,10 +105,18 @@ def parse(
         if _str(row.event_id)
     ]
 
+    # Track within-event position to preserve card order.
+    # ufcscraper returns fights in chronological order (early prelim first, main event last).
+    event_fight_count: dict[str, int] = {}
+
     parsed_fights: list[ParsedFight] = []
     for _, row in fights.iterrows():
         if not _str(row.fight_id):
             continue
+
+        event_id = _str(row.event_id)
+        card_position = event_fight_count.get(event_id, 0)
+        event_fight_count[event_id] = card_position + 1
 
         winner_raw = _str(row.winner).strip()
         winner_ufcstats_id = None if winner_raw.lower() in _NULL_WINNER_MARKERS else winner_raw
@@ -125,6 +134,7 @@ def parse(
             weight_class=_str(row.weight_class) or "Unknown",
             is_title_fight=str(row.title_fight).strip().lower() in ("true", "1", "yes")
             if pd.notna(row.title_fight) else False,
+            card_position=card_position,
         ))
 
     return parsed_fighters, parsed_events, parsed_fights

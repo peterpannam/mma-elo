@@ -115,9 +115,11 @@ export async function getLatestEvent(): Promise<{
     elo_b: { elo_before: number; elo_after: number; delta: number } | null
   }>
 } | null> {
+  const today = new Date().toISOString().split('T')[0]
   const { data: events, error: evErr } = await supabase
     .from('events')
     .select('id, name, date, location')
+    .lte('date', today)
     .order('date', { ascending: false })
     .limit(1)
   if (evErr || !events?.length) return null
@@ -132,6 +134,8 @@ export async function getLatestEvent(): Promise<{
     `)
     .eq('event_id', event.id)
     .order('is_title_fight', { ascending: false })
+    .order('round', { ascending: false, nullsFirst: false })
+    .order('ufcstats_id', { ascending: false })
   if (fErr || !fights) return null
 
   const fightIds = fights.map((f: any) => f.id)
