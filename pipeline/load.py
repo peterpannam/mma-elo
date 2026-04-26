@@ -59,6 +59,9 @@ def upsert_fighters(
             "ufcstats_id": f.ufcstats_id,
             "name": f.name,
             "date_of_birth": f.date_of_birth,
+            "height_cm": f.height_cm,
+            "reach_cm": f.reach_cm,
+            "stance": f.stance,
         }
         for f in fighters
         if f.ufcstats_id and f.name

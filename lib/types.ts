@@ -4,6 +4,9 @@ export interface Fighter {
   slug: string
   nationality: string | null
   date_of_birth: string | null
+  height_cm: number | null
+  reach_cm: number | null
+  stance: string | null
 }
 
 export interface CurrentElo {

@@ -62,7 +62,7 @@ export async function getFighterBySlug(slugOrId: string): Promise<Fighter | null
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId)
   const { data, error } = await supabase
     .from('fighters')
-    .select('id, name, slug, nationality, date_of_birth')
+    .select('id, name, slug, nationality, date_of_birth, height_cm, reach_cm, stance')
     .eq(isUUID ? 'id' : 'slug', slugOrId)
     .single()
   if (error) return null

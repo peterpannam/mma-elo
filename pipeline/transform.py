@@ -25,6 +25,9 @@ class ParsedFighter:
     ufcstats_id: str
     name: str
     date_of_birth: Optional[str]
+    height_cm: Optional[float]
+    reach_cm: Optional[float]
+    stance: Optional[str]
     # weight_class intentionally absent — division lives on elo_history + fights
     # nationality not available from UFCStats
 
@@ -82,6 +85,9 @@ def parse(
             ufcstats_id=_str(row.fighter_id),
             name=f"{_str(row.fighter_f_name)} {_str(row.fighter_l_name)}".strip(),
             date_of_birth=_str(row.fighter_dob) or None,
+            height_cm=float(row.fighter_height_cm) if pd.notna(row.fighter_height_cm) and row.fighter_height_cm else None,
+            reach_cm=float(row.fighter_reach_cm) if pd.notna(row.fighter_reach_cm) and row.fighter_reach_cm else None,
+            stance=_str(row.fighter_stance) or None,
         )
         for _, row in fighters.iterrows()
         if _str(row.fighter_id)

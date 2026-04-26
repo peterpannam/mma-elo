@@ -26,11 +26,12 @@ export async function generateMetadata({
   if (fighterA && fighterB) {
     const title = `${fighterA.name} vs ${fighterB.name}`
     const description = `Compare the ELO career timelines of ${fighterA.name} and ${fighterB.name}.`
+    const ogImage = `/api/og/compare?a=${a}&b=${b}`
     return {
       title,
       description,
-      openGraph: { title: `${title} — The ELO Almanac`, description },
-      twitter: { title: `${title} — The ELO Almanac`, description },
+      openGraph: { title: `${title} — The ELO Almanac`, description, images: [ogImage] },
+      twitter: { card: 'summary_large_image', title: `${title} — The ELO Almanac`, description, images: [ogImage] },
     }
   }
   return { title: 'Fighter Comparison' }

@@ -77,7 +77,37 @@ export default async function FighterProfilePage({
   }
 
   const last5Deltas = history.slice(0, 5).map(e => e.delta)
-  const dob = fighter.date_of_birth ?? ''
+
+  // Fight record from history (deduplicated by fight_id)
+  const seenFights = new Set<string>()
+  let wins = 0, losses = 0, ncs = 0
+  for (const e of history) {
+    if (!e.fight || seenFights.has(e.fight.id)) continue
+    seenFights.add(e.fight.id)
+    if (e.fight.winner_id === fighter.id) wins++
+    else if (e.fight.winner_id !== null) losses++
+    else ncs++
+  }
+
+  // Age from DOB
+  const age = fighter.date_of_birth
+    ? (() => {
+        const [y, m, d] = fighter.date_of_birth!.split('-').map(Number)
+        const today = new Date()
+        let a = today.getFullYear() - y
+        if (today.getMonth() + 1 < m || (today.getMonth() + 1 === m && today.getDate() < d)) a--
+        return a
+      })()
+    : null
+
+  // Height / reach formatters (imperial + metric)
+  const fmtHeight = (cm: number) => {
+    const totalIn = cm / 2.54
+    const ft = Math.floor(totalIn / 12)
+    const inch = Math.round(totalIn % 12)
+    return `${ft}'${inch}" (${Math.round(cm)} cm)`
+  }
+  const fmtReach = (cm: number) => `${Math.round(cm / 2.54)}" (${Math.round(cm)} cm)`
 
   return (
     <div>
@@ -89,10 +119,20 @@ export default async function FighterProfilePage({
         >
           {fighter.name}
         </h1>
-        <p className="font-mono text-xs text-muted mt-1.5">
-          {fighter.nationality ?? 'Unknown nationality'}
-          {dob ? ` · DOB ${dob}` : ''}
-        </p>
+
+        {/* Physical stats row */}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+          {[
+            seenFights.size > 0 && `${wins}-${losses}${ncs > 0 ? `-${ncs}` : ''} (UFC)`,
+            age !== null && `Age ${age}`,
+            fighter.height_cm && fmtHeight(fighter.height_cm),
+            fighter.reach_cm && `Reach ${fmtReach(fighter.reach_cm)}`,
+            fighter.stance,
+            fighter.nationality,
+          ].filter(Boolean).map((val, i) => (
+            <span key={i} className="font-mono text-xs text-muted">{val as string}</span>
+          ))}
+        </div>
 
         {(currentElos.length > 0 || p4p) && (
           <div className="flex flex-wrap gap-3 mt-4">
@@ -188,7 +228,7 @@ export default async function FighterProfilePage({
                             <td className="py-2.5 font-mono text-xs text-muted whitespace-nowrap">
                               {fight.event?.date ?? entry.date}
                             </td>
-                            <td className="py-2.5 pl-3 font-mono text-xs text-muted max-w-[160px] truncate">
+                            <td className="py-2.5 pl-3 font-mono text-xs text-muted max-w-40 truncate">
                               {fight.event?.name ?? '—'}
                             </td>
                             <td className="py-2.5 pl-3">
