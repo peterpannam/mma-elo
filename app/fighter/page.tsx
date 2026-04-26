@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 }
 
 export default async function FighterIndexPage() {
-  let fighters: { id: string; name: string }[] = []
+  let fighters: { id: string; name: string; slug: string }[] = []
   let fetchError: string | null = null
 
   try {

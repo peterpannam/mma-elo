@@ -74,7 +74,7 @@ export default async function LatestEventPage() {
                 {/* Fighter A */}
                 <div className={nc ? '' : aWon ? '' : 'opacity-50'}>
                   <Link
-                    href={`/fighter/${f.fighter_a.id}`}
+                    href={`/fighter/${f.fighter_a.slug}`}
                     className={[
                       'font-sans font-semibold text-base leading-tight',
                       aWon ? 'text-ink' : 'text-muted',
@@ -107,7 +107,7 @@ export default async function LatestEventPage() {
                 {/* Fighter B */}
                 <div className={`text-right ${nc ? '' : bWon ? '' : 'opacity-50'}`}>
                   <Link
-                    href={`/fighter/${f.fighter_b.id}`}
+                    href={`/fighter/${f.fighter_b.slug}`}
                     className={[
                       'font-sans font-semibold text-base leading-tight',
                       bWon ? 'text-ink' : 'text-muted',

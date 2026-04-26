@@ -6,6 +6,7 @@ import Link from 'next/link'
 interface FighterStub {
   id: string
   name: string
+  slug: string
 }
 
 export default function FighterSearch({ fighters }: { fighters: FighterStub[] }) {
@@ -52,7 +53,7 @@ export default function FighterSearch({ fighters }: { fighters: FighterStub[] })
         {filtered.map(f => (
           <Link
             key={f.id}
-            href={`/fighter/${f.id}`}
+            href={`/fighter/${f.slug}`}
             className="flex items-center justify-between py-3 group"
           >
             <span className="font-sans font-semibold text-ink group-hover:text-accent transition-colors">

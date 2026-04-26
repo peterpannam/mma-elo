@@ -37,14 +37,14 @@ export async function getP4PLeaderboard(
   return data as CurrentP4P[]
 }
 
-export async function getAllFighters(): Promise<Pick<Fighter, 'id' | 'name'>[]> {
+export async function getAllFighters(): Promise<Pick<Fighter, 'id' | 'name' | 'slug'>[]> {
   const { data, error } = await supabase
     .from('fighters')
-    .select('id, name')
+    .select('id, name, slug')
     .order('name')
     .limit(5000)
   if (error) throw error
-  return data as Pick<Fighter, 'id' | 'name'>[]
+  return data as Pick<Fighter, 'id' | 'name' | 'slug'>[]
 }
 
 export async function getFighterP4P(id: string): Promise<CurrentP4P | null> {
@@ -57,11 +57,13 @@ export async function getFighterP4P(id: string): Promise<CurrentP4P | null> {
   return data as CurrentP4P
 }
 
-export async function getFighter(id: string): Promise<Fighter | null> {
+// Accepts either a slug ("jon-jones") or a UUID for backwards-compatibility with old links.
+export async function getFighterBySlug(slugOrId: string): Promise<Fighter | null> {
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId)
   const { data, error } = await supabase
     .from('fighters')
-    .select('id, name, nationality, date_of_birth')
-    .eq('id', id)
+    .select('id, name, slug, nationality, date_of_birth')
+    .eq(isUUID ? 'id' : 'slug', slugOrId)
     .single()
   if (error) return null
   return data as Fighter
@@ -84,8 +86,8 @@ export async function getFighterHistory(fighterId: string): Promise<EloHistoryWi
       id, fighter_id, weight_class, fight_id, elo_before, elo_after, delta, date, p4p_elo_before, p4p_elo_after, p4p_delta,
       fight:fight_id (
         id, winner_id, method, round, time, weight_class, is_title_fight,
-        fighter_a:fighter_a_id ( id, name ),
-        fighter_b:fighter_b_id ( id, name ),
+        fighter_a:fighter_a_id ( id, name, slug ),
+        fighter_b:fighter_b_id ( id, name, slug ),
         event:event_id ( id, name, date )
       )
     `)
@@ -106,8 +108,8 @@ export async function getLatestEvent(): Promise<{
     time: string | null
     weight_class: string
     is_title_fight: boolean
-    fighter_a: { id: string; name: string }
-    fighter_b: { id: string; name: string }
+    fighter_a: { id: string; name: string; slug: string }
+    fighter_b: { id: string; name: string; slug: string }
     elo_a: { elo_before: number; elo_after: number; delta: number } | null
     elo_b: { elo_before: number; elo_after: number; delta: number } | null
   }>
@@ -124,8 +126,8 @@ export async function getLatestEvent(): Promise<{
     .from('fights')
     .select(`
       id, winner_id, method, round, time, weight_class, is_title_fight,
-      fighter_a:fighter_a_id ( id, name ),
-      fighter_b:fighter_b_id ( id, name )
+      fighter_a:fighter_a_id ( id, name, slug ),
+      fighter_b:fighter_b_id ( id, name, slug )
     `)
     .eq('event_id', event.id)
     .order('is_title_fight', { ascending: false })
@@ -157,7 +159,7 @@ export async function getLatestEvent(): Promise<{
 }
 
 export async function getRankingsWithElo(weightClass: string): Promise<{
-  official: Array<Ranking & { fighter_name: string; elo: number | null }>
+  official: Array<Ranking & { fighter_name: string; fighter_slug: string | null; elo: number | null }>
   eloTop: CurrentElo[]
 }> {
   const [rankResult, eloResult] = await Promise.all([
@@ -180,12 +182,28 @@ export async function getRankingsWithElo(weightClass: string): Promise<{
 
   const rankings = rankResult.data as Ranking[]
   const eloRows = eloResult.data as CurrentElo[]
-
   const eloById = Object.fromEntries(eloRows.map(r => [r.fighter_id, r]))
+
+  // Fetch slugs for ranked fighters who may not appear in active_elo (inactive fighters)
+  const missingIds = rankings
+    .map(r => r.fighter_id)
+    .filter(id => !eloById[id])
+
+  let slugFallback: Record<string, string> = {}
+  if (missingIds.length > 0) {
+    const { data: fighterRows } = await supabase
+      .from('fighters')
+      .select('id, slug')
+      .in('id', missingIds)
+    for (const f of (fighterRows ?? []) as any[]) {
+      slugFallback[f.id] = f.slug
+    }
+  }
 
   const official = rankings.map(r => ({
     ...r,
     fighter_name: eloById[r.fighter_id]?.fighter_name ?? '—',
+    fighter_slug: eloById[r.fighter_id]?.fighter_slug ?? slugFallback[r.fighter_id] ?? null,
     elo: eloById[r.fighter_id]?.elo ?? null,
   }))
 

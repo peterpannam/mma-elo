@@ -1,6 +1,7 @@
 export interface Fighter {
   id: string
   name: string
+  slug: string
   nationality: string | null
   date_of_birth: string | null
 }
@@ -8,6 +9,7 @@ export interface Fighter {
 export interface CurrentElo {
   fighter_id: string
   fighter_name: string
+  fighter_slug: string
   fighter_status: 'active' | 'inactive'
   weight_class: string
   elo: number
@@ -39,8 +41,8 @@ export interface EloHistoryWithFight extends EloHistoryEntry {
     time: string | null
     weight_class: string
     is_title_fight: boolean
-    fighter_a: { id: string; name: string }
-    fighter_b: { id: string; name: string }
+    fighter_a: { id: string; name: string; slug: string }
+    fighter_b: { id: string; name: string; slug: string }
     event: { id: string; name: string; date: string }
   } | null
 }
@@ -77,6 +79,7 @@ export interface Ranking {
 export interface CurrentP4P {
   fighter_id: string
   fighter_name: string
+  fighter_slug: string
   fighter_status: 'active' | 'inactive'
   elo: number
   date: string

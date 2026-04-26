@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getFighter, getFighterCurrentElos, getFighterHistory, getFighterP4P } from '@/lib/queries'
+import { getFighterBySlug, getFighterCurrentElos, getFighterHistory, getFighterP4P } from '@/lib/queries'
 import { Kicker, Delta, MethodBadge, WEIGHT_CLASS_ABBR, FormDots, HairlineRule } from '@/components/almanac/Atoms'
 import LineChart from '@/components/almanac/LineChart'
 import type { ChartSeries } from '@/components/almanac/LineChart'
@@ -12,10 +12,10 @@ export const revalidate = 3600
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }): Promise<Metadata> {
-  const { id } = await params
-  const fighter = await getFighter(id)
+  const { slug } = await params
+  const fighter = await getFighterBySlug(slug)
   if (!fighter) return { title: 'Fighter Not Found' }
   const title = fighter.name
   const description = `${fighter.name} UFC ELO rating, career fight log, and historical ELO chart.`
@@ -30,18 +30,18 @@ export async function generateMetadata({
 export default async function FighterProfilePage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }) {
-  const { id } = await params
+  const { slug } = await params
 
-  const [fighter, currentElos, history, p4p] = await Promise.all([
-    getFighter(id),
-    getFighterCurrentElos(id),
-    getFighterHistory(id),
-    getFighterP4P(id),
-  ])
-
+  const fighter = await getFighterBySlug(slug)
   if (!fighter) notFound()
+
+  const [currentElos, history, p4p] = await Promise.all([
+    getFighterCurrentElos(fighter.id),
+    getFighterHistory(fighter.id),
+    getFighterP4P(fighter.id),
+  ])
 
   // Build chart series: one line per weight class
   const byWc: Record<string, typeof history> = {}
@@ -63,12 +63,6 @@ export default async function FighterProfilePage({
       })),
   }))
 
-  // Last-5 deltas across all weight classes combined, most-recent first
-  const last5Deltas = history.slice(0, 5).map(e => e.delta)
-
-  const dob = fighter.date_of_birth ?? ''
-
-  // Build P4P chart series from history if data exists
   const p4pPoints = history
     .filter(e => e.p4p_elo_after != null)
     .sort((a, b) => (a.date < b.date ? -1 : 1))
@@ -79,17 +73,14 @@ export default async function FighterProfilePage({
     }))
 
   if (p4pPoints.length > 0) {
-    chartSeries.push({
-      id: 'p4p',
-      name: 'P4P',
-      color: '#5c7ba8',
-      points: p4pPoints,
-    })
+    chartSeries.push({ id: 'p4p', name: 'P4P', color: '#5c7ba8', points: p4pPoints })
   }
+
+  const last5Deltas = history.slice(0, 5).map(e => e.delta)
+  const dob = fighter.date_of_birth ?? ''
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-8">
         <Kicker>Fighter Profile</Kicker>
         <h1
@@ -103,7 +94,6 @@ export default async function FighterProfilePage({
           {dob ? ` · DOB ${dob}` : ''}
         </p>
 
-        {/* Current ELOs */}
         {(currentElos.length > 0 || p4p) && (
           <div className="flex flex-wrap gap-3 mt-4">
             {p4p && (
@@ -118,10 +108,7 @@ export default async function FighterProfilePage({
               </div>
             )}
             {currentElos.map(e => (
-              <div
-                key={e.weight_class}
-                className="border border-rule rounded-sm px-3 py-2 bg-surface"
-              >
+              <div key={e.weight_class} className="border border-rule rounded-sm px-3 py-2 bg-surface">
                 <p className="font-mono text-[10px] tracking-widest uppercase text-muted">
                   {WEIGHT_CLASS_ABBR[e.weight_class] ?? e.weight_class}
                 </p>
@@ -134,7 +121,6 @@ export default async function FighterProfilePage({
           </div>
         )}
 
-        {/* Form dots */}
         {last5Deltas.length > 0 && (
           <div className="mt-4 flex items-center gap-2">
             <span className="font-mono text-[10px] tracking-widest uppercase text-muted">
@@ -147,19 +133,15 @@ export default async function FighterProfilePage({
 
       <HairlineRule className="mb-8" />
 
-      {/* ELO History Chart */}
       {chartSeries.length > 0 && (
         <div className="mb-10">
-          <p className="font-mono text-[10px] tracking-widest uppercase text-muted mb-3">
-            ELO History
-          </p>
+          <p className="font-mono text-[10px] tracking-widest uppercase text-muted mb-3">ELO History</p>
           <LineChart series={chartSeries} height={280} />
         </div>
       )}
 
       <HairlineRule className="mb-8" />
 
-      {/* Fight Log — one table per weight class */}
       <div className="space-y-10">
         <p className="font-mono text-[10px] tracking-widest uppercase text-muted">
           Fight Log ({history.length} fights)
@@ -196,20 +178,22 @@ export default async function FighterProfilePage({
                         const fight = entry.fight
                         if (!fight) return null
 
-                        const isA = fight.fighter_a.id === id
+                        const isA = fight.fighter_a.id === fighter.id
                         const opponent = isA ? fight.fighter_b : fight.fighter_a
-                        const won = fight.winner_id === id
+                        const won = fight.winner_id === fighter.id
                         const nc = fight.winner_id === null
 
                         return (
                           <tr key={entry.id} className="border-b border-rule hover:bg-surface transition-colors">
-                            <td className="py-2.5 font-mono text-xs text-muted whitespace-nowrap">{fight.event?.date ?? entry.date}</td>
+                            <td className="py-2.5 font-mono text-xs text-muted whitespace-nowrap">
+                              {fight.event?.date ?? entry.date}
+                            </td>
                             <td className="py-2.5 pl-3 font-mono text-xs text-muted max-w-[160px] truncate">
                               {fight.event?.name ?? '—'}
                             </td>
                             <td className="py-2.5 pl-3">
                               <Link
-                                href={`/fighter/${opponent.id}`}
+                                href={`/fighter/${opponent.slug}`}
                                 className="font-sans font-semibold text-ink hover:text-accent transition-colors text-sm"
                               >
                                 {opponent.name}

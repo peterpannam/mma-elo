@@ -73,7 +73,7 @@ export default function LeaderboardTable({
               </td>
               <td className="py-2.5 pr-3">
                 <Link
-                  href={`/fighter/${row.fighter_id}`}
+                  href={`/fighter/${row.fighter_slug}`}
                   className="font-sans font-semibold text-ink hover:text-accent transition-colors"
                 >
                   {row.fighter_name}

@@ -88,7 +88,7 @@ export default async function RankingsPage({
                         </td>
                         <td className="py-2.5 pl-3">
                           <Link
-                            href={`/fighter/${r.fighter_id}`}
+                            href={r.fighter_slug ? `/fighter/${r.fighter_slug}` : '#'}
                             className="font-sans font-semibold text-ink hover:text-accent transition-colors"
                           >
                             {r.fighter_name}
@@ -142,7 +142,7 @@ export default async function RankingsPage({
                         <td className="py-2.5 font-mono text-xs text-muted">{i + 1}</td>
                         <td className="py-2.5 pl-3">
                           <Link
-                            href={`/fighter/${row.fighter_id}`}
+                            href={`/fighter/${row.fighter_slug}`}
                             className="font-sans font-semibold text-ink hover:text-accent transition-colors"
                           >
                             {row.fighter_name}
@@ -199,7 +199,7 @@ function SnubList({
         {snubs.map((r, i) => (
           <Link
             key={r.fighter_id}
-            href={`/fighter/${r.fighter_id}`}
+            href={r.fighter_slug ? `/fighter/${r.fighter_slug}` : '#'}
             className="border border-warn rounded-sm px-3 py-2 bg-surface hover:bg-paper transition-colors"
           >
             <p className="font-mono text-[10px] text-warn uppercase tracking-wider">
