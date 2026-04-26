@@ -1,14 +1,20 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import type { DivisionTrend } from '@/lib/types'
+import type { DivisionTrend, TitleFight } from '@/lib/types'
 import { DIVISION_COLORS, WEIGHT_CLASS_ABBR, WEIGHT_CLASSES } from './Atoms'
 import LineChart from './LineChart'
-import type { ChartSeries } from './LineChart'
+import type { ChartSeries, ChartAnnotation } from './LineChart'
 
 const DEFAULT_VISIBLE = ['Middleweight', 'Welterweight', 'Lightweight', 'Light Heavyweight']
 
-export default function TrendsChart({ trends }: { trends: DivisionTrend[] }) {
+export default function TrendsChart({
+  trends,
+  titleFights = [],
+}: {
+  trends: DivisionTrend[]
+  titleFights?: TitleFight[]
+}) {
   const divisions = useMemo(() => {
     const s = new Set(trends.map(t => t.weight_class))
     return WEIGHT_CLASSES.filter(wc => s.has(wc))
@@ -25,6 +31,16 @@ export default function TrendsChart({ trends }: { trends: DivisionTrend[] }) {
       return next
     })
   }
+
+  const annotations: ChartAnnotation[] = useMemo(() => {
+    return titleFights
+      .filter(tf => visible.has(tf.weight_class))
+      .map(tf => ({
+        x: new Date(tf.date).getTime(),
+        label: `${tf.winner_name} · ${WEIGHT_CLASS_ABBR[tf.weight_class] ?? tf.weight_class} · ${tf.date}`,
+        color: DIVISION_COLORS[tf.weight_class] ?? '#7a7065',
+      }))
+  }, [titleFights, visible])
 
   const series: ChartSeries[] = useMemo(() => {
     return [...visible].map(wc => {
@@ -74,7 +90,7 @@ export default function TrendsChart({ trends }: { trends: DivisionTrend[] }) {
           Select at least one division
         </p>
       ) : (
-        <LineChart series={series} height={340} />
+        <LineChart series={series} height={340} annotations={annotations} />
       )}
     </div>
   )

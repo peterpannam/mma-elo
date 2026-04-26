@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import { getDivisionTrends } from '@/lib/queries'
+import { getDivisionTrends, getTitleFights } from '@/lib/queries'
 import { Kicker, SectionHeader, DIVISION_COLORS, WEIGHT_CLASS_ABBR } from '@/components/almanac/Atoms'
 import TrendsChart from '@/components/almanac/TrendsChart'
-import type { DivisionTrend } from '@/lib/types'
+import type { DivisionTrend, TitleFight } from '@/lib/types'
 
 export const revalidate = 3600
 
@@ -21,10 +21,11 @@ export const metadata: Metadata = {
 
 export default async function TrendsPage() {
   let trends: DivisionTrend[] = []
+  let titleFights: TitleFight[] = []
   let fetchError: string | null = null
 
   try {
-    trends = await getDivisionTrends()
+    ;[trends, titleFights] = await Promise.all([getDivisionTrends(), getTitleFights()])
   } catch (e: any) {
     fetchError = e?.message ?? 'Failed to load data'
   }
@@ -56,7 +57,7 @@ export default async function TrendsPage() {
         </p>
       ) : (
         <>
-          <TrendsChart trends={trends} />
+          <TrendsChart trends={trends} titleFights={titleFights} />
 
           {/* Division summary table */}
           <div className="mt-12 border-t border-rule pt-6">

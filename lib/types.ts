@@ -96,3 +96,11 @@ export interface DivisionTrend {
   avg_elo: number
   fighter_count: number
 }
+
+export interface TitleFight {
+  fight_id: string
+  weight_class: string
+  date: string
+  winner_name: string
+  winner_slug: string
+}

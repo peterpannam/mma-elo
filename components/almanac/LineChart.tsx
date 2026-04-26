@@ -15,6 +15,12 @@ export interface ChartSeries {
   points: ChartPoint[]
 }
 
+export interface ChartAnnotation {
+  x: number       // unix timestamp ms
+  label: string   // tooltip text
+  color: string
+}
+
 const MARGIN = { top: 12, right: 16, bottom: 32, left: 52 }
 
 function formatDate(ts: number) {
@@ -26,11 +32,13 @@ export default function LineChart({
   height = 280,
   yMin: yMinProp,
   yMax: yMaxProp,
+  annotations = [],
 }: {
   series: ChartSeries[]
   height?: number
   yMin?: number
   yMax?: number
+  annotations?: ChartAnnotation[]
 }) {
   const [tooltip, setTooltip] = useState<{
     x: number; y: number; label: string
@@ -154,6 +162,26 @@ export default function LineChart({
           y1={MARGIN.top} y2={MARGIN.top + H}
           stroke="#1a1612" strokeWidth="1"
         />
+
+        {/* Champion title-change annotations */}
+        {annotations.map((ann, i) => {
+          const sx = toSvgX(ann.x)
+          if (sx < MARGIN.left || sx > W - MARGIN.right) return null
+          return (
+            <line
+              key={i}
+              x1={sx} x2={sx}
+              y1={MARGIN.top} y2={MARGIN.top + H}
+              stroke={ann.color}
+              strokeWidth="1"
+              strokeDasharray="3 3"
+              opacity={0.45}
+              style={{ cursor: 'pointer' }}
+              onMouseEnter={() => setTooltip({ x: sx, y: MARGIN.top + 8, label: ann.label })}
+              onMouseLeave={() => setTooltip(null)}
+            />
+          )
+        })}
 
         {/* Series lines */}
         {series.map(s => {

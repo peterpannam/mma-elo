@@ -7,6 +7,7 @@ import type {
   Event,
   Fighter,
   Ranking,
+  TitleFight,
 } from './types'
 
 export async function getLeaderboard(
@@ -224,6 +225,30 @@ export async function getDivisionTrends(weightClasses?: string[]): Promise<Divis
   const { data, error } = await query
   if (error) throw error
   return data as DivisionTrend[]
+}
+
+export async function getTitleFights(): Promise<TitleFight[]> {
+  const { data, error } = await supabase
+    .from('fights')
+    .select(`
+      id,
+      weight_class,
+      winner:winner_id ( name, slug ),
+      event:event_id ( date )
+    `)
+    .eq('is_title_fight', true)
+    .not('winner_id', 'is', null)
+  if (error) throw error
+  return (data as any[])
+    .filter(r => r.winner && r.event)
+    .map(r => ({
+      fight_id: r.id,
+      weight_class: r.weight_class,
+      date: r.event.date,
+      winner_name: r.winner.name,
+      winner_slug: r.winner.slug,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date))
 }
 
 export async function getTopFighterId(): Promise<string | null> {
