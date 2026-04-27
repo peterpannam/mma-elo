@@ -81,9 +81,8 @@ def _scrape() -> list[dict]:
         wc = re.sub(r"\s+Top Rank$", "", wc).strip()
 
         if "Pound" in wc:
-            continue  # skip P4P tables — not division-specific
-
-        if wc not in _KNOWN_WEIGHT_CLASSES:
+            wc = "Women's P4P" if "Women" in wc else "P4P"
+        elif wc not in _KNOWN_WEIGHT_CLASSES:
             log.warning("Unrecognised weight class on UFC.com: %r — skipping", wc)
             continue
 

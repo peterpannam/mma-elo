@@ -163,10 +163,15 @@ export async function getLatestEvent(): Promise<{
   return { event, fights: enriched }
 }
 
-export async function getRankingsWithElo(weightClass: string): Promise<{
+export async function getRankingsWithElo(weightClass: string, mode: 'active' | 'all' = 'active'): Promise<{
   official: Array<Ranking & { fighter_name: string; fighter_slug: string | null; elo: number | null }>
   eloTop: CurrentElo[]
 }> {
+  const isP4P = weightClass === 'P4P' || weightClass === "Women's P4P"
+  const eloTable = isP4P
+    ? (mode === 'all' ? 'current_p4p' : 'active_p4p')
+    : (mode === 'all' ? 'current_elo' : 'active_elo')
+
   const [rankResult, eloResult] = await Promise.all([
     supabase
       .from('rankings')
@@ -174,19 +179,18 @@ export async function getRankingsWithElo(weightClass: string): Promise<{
       .eq('weight_class', weightClass)
       .is('valid_to', null)
       .order('rank'),
-    supabase
-      .from('active_elo')
-      .select('*')
-      .eq('weight_class', weightClass)
-      .order('elo', { ascending: false })
-      .limit(50),
+    isP4P
+      ? supabase.from(eloTable).select('*').order('elo', { ascending: false }).limit(50)
+      : supabase.from(eloTable).select('*').eq('weight_class', weightClass).order('elo', { ascending: false }).limit(50),
   ])
 
   if (rankResult.error) throw rankResult.error
   if (eloResult.error) throw eloResult.error
 
   const rankings = rankResult.data as Ranking[]
-  const eloRows = eloResult.data as CurrentElo[]
+  const eloRows: CurrentElo[] = isP4P
+    ? (eloResult.data as CurrentP4P[]).map(r => ({ ...r, weight_class: weightClass }))
+    : eloResult.data as CurrentElo[]
   const eloById = Object.fromEntries(eloRows.map(r => [r.fighter_id, r]))
 
   // Fetch slugs for ranked fighters who may not appear in active_elo (inactive fighters)

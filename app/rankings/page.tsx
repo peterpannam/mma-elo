@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getRankingsWithElo } from '@/lib/queries'
 import { Kicker, SectionHeader, WEIGHT_CLASS_ABBR } from '@/components/almanac/Atoms'
 import DivisionPicker from '@/components/almanac/DivisionPicker'
+import ModeToggle from '@/components/almanac/ModeToggle'
 import BandChart from '@/components/almanac/BandChart'
 import type { CurrentElo } from '@/lib/types'
 
@@ -11,7 +12,7 @@ export const revalidate = 3600
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ wc?: string }>
+  searchParams: Promise<{ wc?: string; mode?: string }>
 }): Promise<Metadata> {
   const { wc = 'Middleweight' } = await searchParams
   const title = `${wc}: ELO vs UFC Rankings`
@@ -27,15 +28,16 @@ export async function generateMetadata({
 export default async function RankingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ wc?: string }>
+  searchParams: Promise<{ wc?: string; mode?: string }>
 }) {
-  const { wc = 'Middleweight' } = await searchParams
+  const { wc = 'Middleweight', mode } = await searchParams
+  const activeMode: 'active' | 'all' = mode === 'all' ? 'all' : 'active'
 
   let data: Awaited<ReturnType<typeof getRankingsWithElo>> | null = null
   let fetchError: string | null = null
 
   try {
-    data = await getRankingsWithElo(wc)
+    data = await getRankingsWithElo(wc, activeMode)
   } catch (e: any) {
     fetchError = e?.message ?? 'Failed to load data'
   }
@@ -47,7 +49,10 @@ export default async function RankingsPage({
           <Kicker>ELO vs Official UFC Rankings</Kicker>
           <SectionHeader>{wc}</SectionHeader>
         </div>
-        <DivisionPicker current={wc} />
+        <div className="flex flex-col gap-2 items-start sm:items-end">
+          <ModeToggle current={activeMode} />
+          <DivisionPicker current={wc} />
+        </div>
       </div>
 
       {fetchError && (

@@ -33,7 +33,7 @@ export default async function LeaderboardPage({
 }: {
   searchParams: Promise<{ wc?: string; mode?: string }>
 }) {
-  const { wc = 'Middleweight', mode } = await searchParams
+  const { wc = 'P4P', mode } = await searchParams
   const activeMode: 'active' | 'all' = mode === 'all' ? 'all' : 'active'
   const isP4P = wc === 'P4P'
 
@@ -50,9 +50,7 @@ export default async function LeaderboardPage({
   }
 
   const heading = isP4P ? 'Pound for Pound' : wc
-  const kicker = isP4P
-    ? 'Career-spanning ELO · all weight classes'
-    : 'ELO Rankings'
+  const kicker = 'ELO Rankings'
 
   return (
     <div>
@@ -60,17 +58,16 @@ export default async function LeaderboardPage({
         <div>
           <Kicker>{kicker}</Kicker>
           <SectionHeader>{heading}</SectionHeader>
-          {rows.length > 0 && (
             <p className="font-mono text-xs text-muted mt-1">
-              {rows.length} {activeMode === 'active' ? 'active ' : ''}fighter{rows.length !== 1 ? 's' : ''}
+              Ranked by current ELO. Figures are descending by current elo. Click any header to re-sort.
             </p>
-          )}
         </div>
         <div className="flex flex-col gap-2 items-start sm:items-end">
           <ModeToggle current={activeMode} />
-          <DivisionPicker current={wc} />
+          
         </div>
       </div>
+      <DivisionPicker current={wc} />
 
       {fetchError ? (
         <div className="border border-rule rounded-sm p-6 font-mono text-xs text-muted">
