@@ -81,7 +81,7 @@ export function FormDots({ deltas }: { deltas: number[] }) {
   )
 }
 
-export function Sparkline({ values }: { values: number[] }) {
+export function Sparkline({ values, id }: { values: number[]; id: string }) {
   if (values.length < 2) return <span className="text-muted font-mono text-xs">—</span>
 
   const min = Math.min(...values)
@@ -90,26 +90,40 @@ export function Sparkline({ values }: { values: number[] }) {
   const W = 56
   const H = 18
 
-  const pts = values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * W
-      const y = H - ((v - min) / range) * (H - 2) - 1
-      return `${x.toFixed(1)},${y.toFixed(1)}`
-    })
-    .join(' ')
+  const coords = values.map((v, i) => ({
+    x: (i / (values.length - 1)) * W,
+    y: H - ((v - min) / range) * (H - 2) - 1,
+  }))
+
+  const linePts = coords.map(c => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ')
+  const first = coords[0]
+  const last = coords[coords.length - 1]
+  const areaPath =
+    coords.map((c, i) => `${i === 0 ? 'M' : 'L'}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ') +
+    ` L${last.x.toFixed(1)},${H} L${first.x.toFixed(1)},${H} Z`
 
   const trending = values[values.length - 1] >= values[values.length - 2]
+  const color = trending ? '#2f6b3a' : '#a82e1c'
+  const gradId = `sg-${id}`
 
   return (
     <svg width={W} height={H} overflow="visible" aria-hidden="true">
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity={0.5} />
+          <stop offset="100%" stopColor={color} stopOpacity={0.2} />
+        </linearGradient>
+      </defs>
+      <path d={areaPath} fill={`url(#${gradId})`} />
       <polyline
-        points={pts}
+        points={linePts}
         fill="none"
-        stroke={trending ? '#2f6b3a' : '#a82e1c'}
+        stroke={color}
         strokeWidth="1.5"
         strokeLinejoin="round"
         strokeLinecap="round"
       />
+      <circle cx={last.x.toFixed(1)} cy={last.y.toFixed(1)} r="2" fill={color} />
     </svg>
   )
 }

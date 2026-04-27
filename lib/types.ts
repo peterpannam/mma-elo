@@ -19,6 +19,14 @@ export interface CurrentElo {
   date: string
   fight_id: string
   delta: number
+  // optional stats (populated by getLeaderboard)
+  peak_elo?: number | null
+  wins?: number
+  losses?: number
+  draws?: number
+  last_5_deltas?: number[] | null
+  trend_5?: number
+  date_of_birth?: string | null
 }
 
 export interface EloHistoryEntry {
@@ -88,6 +96,14 @@ export interface CurrentP4P {
   date: string
   fight_id: string
   delta: number
+  // optional stats (populated by getP4PLeaderboard)
+  peak_elo?: number | null
+  wins?: number
+  losses?: number
+  draws?: number
+  last_5_deltas?: number[] | null
+  trend_5?: number
+  date_of_birth?: string | null
 }
 
 export interface DivisionTrend {

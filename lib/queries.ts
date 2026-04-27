@@ -15,27 +15,54 @@ export async function getLeaderboard(
   mode: 'active' | 'all' = 'active',
 ): Promise<CurrentElo[]> {
   const table = mode === 'active' ? 'active_elo' : 'current_elo'
-  const { data, error } = await supabase
-    .from(table)
-    .select('*')
-    .eq('weight_class', weightClass)
-    .order('elo', { ascending: false })
-    .limit(200)
-  if (error) throw error
-  return data as CurrentElo[]
+  const [eloResult, statsResult] = await Promise.all([
+    supabase
+      .from(table)
+      .select('*')
+      .eq('weight_class', weightClass)
+      .order('elo', { ascending: false })
+      .limit(200),
+    supabase
+      .from('fighter_division_stats')
+      .select('fighter_id, peak_elo, wins, losses, draws, last_5_deltas, trend_5, date_of_birth')
+      .eq('weight_class', weightClass),
+  ])
+  if (eloResult.error) throw eloResult.error
+  type DivStats = { fighter_id: string; peak_elo: number | null; wins: number; losses: number; draws: number; last_5_deltas: number[] | null; trend_5: number; date_of_birth: string | null }
+  const statsMap = Object.fromEntries(
+    ((statsResult.data ?? []) as DivStats[]).map(s => [s.fighter_id, s])
+  )
+  return (eloResult.data as CurrentElo[]).map(row => ({
+    ...row,
+    ...(statsMap[row.fighter_id] ?? {}),
+  }))
 }
 
 export async function getP4PLeaderboard(
   mode: 'active' | 'all' = 'active',
 ): Promise<CurrentP4P[]> {
   const table = mode === 'active' ? 'active_p4p' : 'current_p4p'
-  const { data, error } = await supabase
+  const { data: eloData, error: eloError } = await supabase
     .from(table)
     .select('*')
     .order('elo', { ascending: false })
     .limit(200)
-  if (error) throw error
-  return data as CurrentP4P[]
+  if (eloError) throw eloError
+
+  const ids = (eloData as CurrentP4P[]).map(r => r.fighter_id)
+  type CareerStats = { fighter_id: string; peak_elo: number | null; wins: number; losses: number; draws: number; last_5_deltas: number[] | null; trend_5: number; date_of_birth: string | null }
+  const { data: statsData } = await supabase
+    .from('fighter_career_stats')
+    .select('fighter_id, peak_elo, wins, losses, draws, last_5_deltas, trend_5, date_of_birth')
+    .in('fighter_id', ids)
+
+  const statsMap = Object.fromEntries(
+    ((statsData ?? []) as CareerStats[]).map(s => [s.fighter_id, s])
+  )
+  return (eloData as CurrentP4P[]).map(row => ({
+    ...row,
+    ...(statsMap[row.fighter_id] ?? {}),
+  }))
 }
 
 export async function getAllFighters(): Promise<Pick<Fighter, 'id' | 'name' | 'slug'>[]> {
