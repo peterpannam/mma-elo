@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { getLatestEvent } from '@/lib/queries'
-import { Kicker, SectionHeader, MethodBadge, Delta } from '@/components/almanac/Atoms'
+import { Kicker } from '@/components/almanac/Atoms'
+import LatestEventClient from '@/components/almanac/LatestEventClient'
 
 export const revalidate = 3600
 
@@ -30,104 +30,64 @@ export default async function LatestEventPage() {
 
   if (fetchError || !result) {
     return (
-      <div className="font-mono text-xs text-muted p-6 border border-rule rounded-sm">
+      <div className="font-mono text-xs text-muted p-6 border border-rule">
         {fetchError ?? 'No events found'}
       </div>
     )
   }
 
   const { event, fights } = result
+  const titleFights = fights.filter(f => f.is_title_fight).length
+
+  const formattedDate = (() => {
+    try {
+      return new Date(event.date).toLocaleDateString('en-AU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    } catch {
+      return event.date
+    }
+  })()
 
   return (
     <div>
-      <Kicker>Latest Event</Kicker>
-      <SectionHeader>{event.name}</SectionHeader>
-      <p className="font-mono text-xs text-muted mt-1 mb-8">
-        {event.date}
-        {event.location ? ` · ${event.location}` : ''}
-        <span className="ml-3">
-          {fights.length} fight{fights.length !== 1 ? 's' : ''}
-        </span>
-      </p>
+      {/* Event hero */}
+      <div
+        className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-6 items-end mb-6 pb-5"
+        style={{ borderBottom: '2px solid #1a1612' }}
+      >
+        <div>
+          <Kicker>§ · The latest cycle</Kicker>
+          <h1
+            className="mt-1.5 leading-none"
+            style={{ fontFamily: 'var(--font-playfair)', fontWeight: 900, fontSize: 'clamp(28px, 5vw, 40px)' }}
+          >
+            {event.name}
+          </h1>
+          <p className="font-sans text-sm text-muted italic mt-2">
+            {event.location ? `${event.location} · ` : ''}{formattedDate}
+          </p>
+        </div>
 
-      <div className="space-y-0 border-t-2 border-ink">
-        {fights.map((f, i) => {
-          const aWon = f.winner_id === f.fighter_a.id
-          const bWon = f.winner_id === f.fighter_b.id
-          const nc = f.winner_id === null
-
-          return (
-            <div
-              key={f.id}
-              className={[
-                'border-b border-rule py-4',
-                f.is_title_fight ? 'bg-surface' : '',
-              ].join(' ')}
-            >
-              {f.is_title_fight && (
-                <p className="font-mono text-[10px] tracking-widest uppercase text-accent mb-2">
-                  Title Fight
-                </p>
-              )}
-
-              <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
-                {/* Fighter A */}
-                <div className={nc ? '' : aWon ? '' : 'opacity-50'}>
-                  <Link
-                    href={`/fighter/${f.fighter_a.slug}`}
-                    className={[
-                      'font-sans font-semibold text-base leading-tight',
-                      aWon ? 'text-ink' : 'text-muted',
-                      'hover:text-accent transition-colors',
-                    ].join(' ')}
-                  >
-                    {f.fighter_a.name}
-                  </Link>
-                  {f.elo_a && (
-                    <p className="font-mono text-xs text-muted mt-0.5">
-                      {Math.round(f.elo_a.elo_before)} → {Math.round(f.elo_a.elo_after)}{' '}
-                      <Delta value={f.elo_a.delta} />
-                    </p>
-                  )}
-                </div>
-
-                {/* Middle: result */}
-                <div className="text-center">
-                  <div className="font-mono text-[10px] tracking-widest uppercase text-muted mb-1">
-                    {nc ? 'NC/Draw' : 'def.'}
-                  </div>
-                  <MethodBadge method={f.method} />
-                  {f.round && (
-                    <p className="font-mono text-[10px] text-muted mt-0.5">
-                      R{f.round}{f.time ? ` ${f.time}` : ''}
-                    </p>
-                  )}
-                </div>
-
-                {/* Fighter B */}
-                <div className={`text-right ${nc ? '' : bWon ? '' : 'opacity-50'}`}>
-                  <Link
-                    href={`/fighter/${f.fighter_b.slug}`}
-                    className={[
-                      'font-sans font-semibold text-base leading-tight',
-                      bWon ? 'text-ink' : 'text-muted',
-                      'hover:text-accent transition-colors',
-                    ].join(' ')}
-                  >
-                    {f.fighter_b.name}
-                  </Link>
-                  {f.elo_b && (
-                    <p className="font-mono text-xs text-muted mt-0.5">
-                      {Math.round(f.elo_b.elo_before)} → {Math.round(f.elo_b.elo_after)}{' '}
-                      <Delta value={f.elo_b.delta} />
-                    </p>
-                  )}
-                </div>
-              </div>
+        <div
+          className="font-mono text-[10px] tracking-wider text-muted space-y-1 sm:text-right sm:border-l sm:border-rule sm:pl-5"
+          style={{ letterSpacing: '0.08em' }}
+        >
+          <div>BOUTS · <b className="text-ink text-sm font-semibold">{fights.length}</b></div>
+          {titleFights > 0 && (
+            <div>
+              TITLE FIGHTS ·{' '}
+              <b className="text-sm font-semibold" style={{ color: '#a82e1c' }}>{titleFights}</b>
             </div>
-          )
-        })}
+          )}
+        </div>
       </div>
+
+      {/* Interactive bout list + sidebar */}
+      <LatestEventClient fights={fights} />
     </div>
   )
 }
