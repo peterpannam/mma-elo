@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 export interface ChartPoint {
   x: number   // unix timestamp ms
@@ -44,6 +44,20 @@ export default function LineChart({
     x: number; y: number; label: string
   } | null>(null)
 
+  // Measure container so viewBox always matches actual pixel width — no letterboxing.
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [W, setW] = useState(600)
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const obs = new ResizeObserver(entries => {
+      const w = entries[0].contentRect.width
+      if (w > 0) setW(Math.round(w))
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
   const allPoints = series.flatMap(s => s.points)
   if (allPoints.length === 0) return (
     <div className="flex items-center justify-center h-32 font-mono text-xs text-muted">
@@ -64,8 +78,7 @@ export default function LineChart({
   const xRange = xMax - xMin || 1
   const yRange = yMax - yMin || 1
 
-  // SVG inner dimensions
-  const W = 600
+  // SVG inner dimensions — W is now the measured container width
   const H = height - MARGIN.top - MARGIN.bottom
 
   function toSvgX(ts: number) {
@@ -91,7 +104,7 @@ export default function LineChart({
   }
 
   return (
-    <div className="relative w-full" style={{ maxWidth: '100%' }}>
+    <div ref={containerRef} className="relative w-full" style={{ maxWidth: '100%' }}>
       <svg
         viewBox={`0 0 ${W} ${height}`}
         className="w-full"
