@@ -286,6 +286,26 @@ export async function getTitleFights(): Promise<TitleFight[]> {
     .sort((a, b) => a.date.localeCompare(b.date))
 }
 
+export async function getDivisionChampionId(weightClass: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('rankings')
+    .select('fighter_id')
+    .eq('weight_class', weightClass)
+    .eq('rank', 0)
+    .is('valid_to', null)
+    .maybeSingle()
+  return data?.fighter_id ?? null
+}
+
+export async function getAllChampionIds(): Promise<string[]> {
+  const { data } = await supabase
+    .from('rankings')
+    .select('fighter_id')
+    .eq('rank', 0)
+    .is('valid_to', null)
+  return (data ?? []).map((r: { fighter_id: string }) => r.fighter_id)
+}
+
 export async function getTopFighterId(): Promise<string | null> {
   const { data, error } = await supabase
     .from('current_elo')

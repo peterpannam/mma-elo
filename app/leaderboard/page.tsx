@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getLeaderboard, getP4PLeaderboard } from '@/lib/queries'
+import { getLeaderboard, getP4PLeaderboard, getDivisionChampionId, getAllChampionIds } from '@/lib/queries'
 import { Kicker, SectionHeader } from '@/components/almanac/Atoms'
 import DivisionPicker from '@/components/almanac/DivisionPicker'
 import LeaderboardTable from '@/components/almanac/LeaderboardTable'
@@ -40,11 +40,13 @@ export default async function LeaderboardPage({
   type RowArray = Awaited<ReturnType<typeof getLeaderboard>> | Awaited<ReturnType<typeof getP4PLeaderboard>>
   let rows: RowArray = []
   let fetchError: string | null = null
+  let championIds: string[] = []
 
   try {
-    rows = isP4P
-      ? await getP4PLeaderboard(activeMode)
-      : await getLeaderboard(wc, activeMode)
+    ;[rows, championIds] = await Promise.all([
+      isP4P ? getP4PLeaderboard(activeMode) : getLeaderboard(wc, activeMode),
+      isP4P ? getAllChampionIds() : getDivisionChampionId(wc).then(id => id ? [id] : []),
+    ]) as [RowArray, string[]]
   } catch (e: any) {
     fetchError = e?.message ?? 'Failed to load data'
   }
@@ -81,7 +83,7 @@ export default async function LeaderboardPage({
           )}
         </div>
       ) : (
-        <LeaderboardTable rows={rows} />
+        <LeaderboardTable rows={rows} championIds={championIds} />
       )}
     </div>
   )

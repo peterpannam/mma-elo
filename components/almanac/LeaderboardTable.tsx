@@ -50,9 +50,11 @@ function ColHead({
 export default function LeaderboardTable({
   rows,
   showWeightClass = false,
+  championIds = [],
 }: {
   rows: Row[]
   showWeightClass?: boolean
+  championIds?: string[]
 }) {
   const [sortKey, setSortKey] = useState<SortKey>('elo')
   const [sortAsc, setSortAsc] = useState(false)
@@ -103,12 +105,22 @@ export default function LeaderboardTable({
                 {i + 1}
               </td>
               <td className="py-2.5 pr-3">
-                <Link
-                  href={`/fighter/${row.fighter_slug}`}
-                  className="font-sans font-semibold text-ink text-[18px] hover:text-accent transition-colors"
-                >
-                  {row.fighter_name}
-                </Link>
+                <span className="inline-flex items-center gap-2">
+                  <Link
+                    href={`/fighter/${row.fighter_slug}`}
+                    className="font-sans font-semibold text-ink text-[18px] hover:text-accent transition-colors"
+                  >
+                    {row.fighter_name}
+                  </Link>
+                  {championIds.includes(row.fighter_id) && (
+                    <span
+                      className="font-mono text-[9px] font-bold tracking-wide px-1 py-px rounded-sm shrink-0"
+                      style={{ background: '#c9941a', color: '#fff' }}
+                    >
+                      CHAMP
+                    </span>
+                  )}
+                </span>
               </td>
               {showWeightClass && (
                 <td className="py-2.5 pl-3 pr-3">

@@ -69,13 +69,21 @@ export function FormDots({ deltas }: { deltas: number[] }) {
           key={i}
           title={d > 0 ? 'Win' : d < 0 ? 'Loss' : 'Draw/NC'}
           style={{
-            width: 7,
-            height: 7,
-            borderRadius: '50%',
-            display: 'inline-block',
+            width: 16,
+            height: 16,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             backgroundColor: d > 0 ? '#2f6b3a' : d < 0 ? '#a82e1c' : '#c8bfb0',
+            color: d === 0 ? '#1a1612' : '#f3ede3',
+            fontSize: 9,
+            fontWeight: 700,
+            fontFamily: 'var(--font-jetbrains-mono)',
+            letterSpacing: 0,
           }}
-        />
+        >
+          {d > 0 ? 'W' : d < 0 ? 'L' : 'D'}
+        </span>
       ))}
     </span>
   )
@@ -104,7 +112,7 @@ export function Sparkline({ values, id }: { values: number[]; id: string }) {
 
   const trending = values[values.length - 1] >= values[values.length - 2]
   const color = trending ? '#2f6b3a' : '#a82e1c'
-  const gradId = `sg-${id}`
+  const gradId = `sg-${id.replace(/\s+/g, '-')}`
 
   return (
     <svg width={W} height={H} overflow="visible" aria-hidden="true">
