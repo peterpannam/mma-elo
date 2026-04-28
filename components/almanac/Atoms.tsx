@@ -138,13 +138,13 @@ export function Sparkline({ values, id }: { values: number[]; id: string }) {
 
 export function Delta({ value }: { value: number }) {
   const rounded = Math.round(value)
-  if (rounded === 0) return <span className="font-mono text-xs text-muted">±0</span>
+  if (rounded === 0) return <span className="font-mono text-xs text-muted">—</span>
   return (
     <span
-      className="font-mono text-xs"
+      className="font-mono text-xs whitespace-nowrap"
       style={{ color: rounded > 0 ? '#2f6b3a' : '#a82e1c' }}
     >
-      {rounded > 0 ? '+' : ''}{rounded}
+      {rounded > 0 ? '▲' : '▼'} {Math.abs(rounded)}
     </span>
   )
 }

@@ -4,7 +4,6 @@ import { getRankingsWithElo } from '@/lib/queries'
 import { Kicker, SectionHeader, WEIGHT_CLASS_ABBR } from '@/components/almanac/Atoms'
 import DivisionPicker from '@/components/almanac/DivisionPicker'
 import ModeToggle from '@/components/almanac/ModeToggle'
-import BandChart from '@/components/almanac/BandChart'
 import type { CurrentElo } from '@/lib/types'
 
 export const revalidate = 3600
@@ -67,77 +66,179 @@ export default async function RankingsPage({
             </p>
           )}
 
-          {(() => {
-            const officialRankById = Object.fromEntries(
-              data.official.map(r => [r.fighter_id, r.rank])
+          {data.official.length > 0 && (() => {
+            const ROWS = Math.min(10, Math.max(data!.eloTop.length, data!.official.length))
+            const eloList  = data!.eloTop.slice(0, ROWS)
+            const offList  = data!.official.slice(0, ROWS)
+            const ROW_H    = 52
+            const CONN_W   = 64
+            const svgH     = ROWS * ROW_H
+
+            // Column header height offset for the connector SVG (matches the black header bar below)
+            const HEADER_H = 38
+
+            const paths = eloList.map((f, eloIdx) => {
+              const offIdx = offList.findIndex(r => r.fighter_id === f.fighter_id)
+              if (offIdx === -1) return null
+              const y1 = eloIdx * ROW_H + ROW_H / 2
+              const y2 = offIdx  * ROW_H + ROW_H / 2
+              const agrees = eloIdx === offIdx
+              return { y1, y2, agrees }
+            })
+
+            const colHeader = (label: string) => (
+              <div
+                className="font-mono text-[11px] tracking-widest uppercase px-3 py-2.5"
+                style={{ background: '#1a1612', color: '#f3ede3', height: HEADER_H }}
+              >
+                {label}
+              </div>
             )
-            const bandRows = data.eloTop.slice(0, 20).map(row => ({
-              fighter_id:   row.fighter_id,
-              fighter_name: row.fighter_name,
-              fighter_slug: row.fighter_slug,
-              elo:          row.elo,
-              official_rank: officialRankById[row.fighter_id] ?? null,
-            }))
+
+            const rankNum = (n: number, accent: boolean, gold = false) => (
+              <span
+                className="shrink-0 w-8 text-right leading-none"
+                style={{
+                  fontFamily: 'var(--font-playfair)',
+                  fontSize: 18,
+                  fontWeight: 900,
+                  color: gold ? '#b8862b' : accent ? '#a82e1c' : '#1a1612',
+                  display: 'inline-block',
+                }}
+              >
+                {String(n).padStart(2, '0')}
+              </span>
+            )
 
             return (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                {/* Official Rankings */}
-                <div>
-                  <p className="font-mono text-[10px] tracking-widest uppercase text-muted mb-4">
-                    Official UFC Rankings
-                  </p>
-                  <table className="w-full text-sm border-collapse">
-                    <thead>
-                      <tr className="border-b-2 border-ink">
-                        <th className="pb-2 text-left font-mono text-[10px] uppercase text-muted">Rank</th>
-                        <th className="pb-2 text-left font-mono text-[10px] uppercase text-muted pl-3">Fighter</th>
-                        <th className="pb-2 text-right font-mono text-[10px] uppercase text-muted">ELO</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.official.map(r => {
-                        const eloRank = r.elo
-                          ? data!.eloTop.findIndex(e => e.fighter_id === r.fighter_id) + 1
-                          : null
-                        const snubbed = eloRank && eloRank > data!.official.length
-                        return (
-                          <tr key={r.id} className="border-b border-rule hover:bg-surface transition-colors">
-                            <td className="py-2.5 font-mono text-xs text-muted">
-                              {r.rank === 0 ? 'C' : r.rank}
-                            </td>
-                            <td className="py-2.5 pl-3">
-                              <Link
-                                href={r.fighter_slug ? `/fighter/${r.fighter_slug}` : '#'}
-                                className="font-sans font-semibold text-ink hover:text-accent transition-colors"
-                              >
-                                {r.fighter_name}
-                              </Link>
-                            </td>
-                            <td className="py-2.5 text-right font-mono text-xs">
-                              {r.elo != null ? (
-                                <span className={snubbed ? 'text-warn' : 'text-ink'}>
-                                  {Math.round(r.elo)}
-                                  {eloRank && (
-                                    <span className="text-muted ml-1">(#{eloRank})</span>
-                                  )}
+              <div className="mb-12 overflow-x-auto">
+                <p className="font-mono text-[10px] text-muted italic mb-3">
+                  Two columns, one division. Left: ELO leaderboard, built from outcomes alone. Right: the promotion&apos;s official ranking.{' '}
+                  Lines connect where they agree; gaps where they don&apos;t.
+                </p>
+
+                <div className="flex gap-0" style={{ minWidth: 520 }}>
+                  {/* ELO column */}
+                  <div className="flex-1 min-w-0">
+                    {colHeader('By ELO (computed)')}
+                    {eloList.map((f, i) => {
+                      const offIdx = offList.findIndex(r => r.fighter_id === f.fighter_id)
+                      const isSnub = offIdx === -1
+                      return (
+                        <div
+                          key={f.fighter_id}
+                          className="flex items-center gap-2 border-b border-rule px-3"
+                          style={{
+                            height: ROW_H,
+                            background: isSnub ? 'rgba(168,46,28,0.06)' : 'transparent',
+                          }}
+                        >
+                          {rankNum(i + 1, i < 3)}
+                          <div className="flex-1 min-w-0">
+                            <Link
+                              href={`/fighter/${f.fighter_slug}`}
+                              className="block truncate hover:text-accent transition-colors"
+                              style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, fontSize: 14, color: '#1a1612' }}
+                            >
+                              {f.fighter_name}
+                            </Link>
+                            <span className="font-mono text-[10px] text-muted">
+                              {Math.round(f.elo)}
+                              {isSnub && (
+                                <span className="ml-2 font-mono text-[9px] tracking-wider" style={{ color: '#a82e1c' }}>
+                                  UNRANKED ★
                                 </span>
-                              ) : (
-                                <span className="text-muted">—</span>
                               )}
-                            </td>
-                          </tr>
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Connector SVG */}
+                  <div className="shrink-0" style={{ width: CONN_W }}>
+                    <div style={{ height: HEADER_H }} />
+                    <svg width={CONN_W} height={svgH} className="block">
+                      {paths.map((p, i) => {
+                        if (!p) return null
+                        const { y1, y2, agrees } = p
+                        return (
+                          <path
+                            key={i}
+                            d={`M 0 ${y1} C ${CONN_W / 2} ${y1}, ${CONN_W / 2} ${y2}, ${CONN_W} ${y2}`}
+                            fill="none"
+                            stroke={agrees ? '#2f6b3a' : '#a82e1c'}
+                            strokeWidth={agrees ? 1 : 1.5}
+                            strokeDasharray={agrees ? '0' : '3 3'}
+                            opacity={0.55}
+                          />
                         )
                       })}
-                    </tbody>
-                  </table>
+                    </svg>
+                  </div>
+
+                  {/* Official column */}
+                  <div className="flex-1 min-w-0">
+                    {colHeader('By official rank')}
+                    {offList.map((r, i) => {
+                      const eloIdx = eloList.findIndex(e => e.fighter_id === r.fighter_id)
+                      const isChamp = r.rank === 0
+                      const diff = eloIdx !== -1 && eloIdx !== i ? eloIdx - i : null
+                      return (
+                        <div
+                          key={r.id}
+                          className="flex items-center gap-2 border-b border-rule px-3"
+                          style={{ height: ROW_H }}
+                        >
+                          <span
+                            className="shrink-0 w-8 text-right leading-none font-mono text-xs"
+                            style={{
+                              fontFamily: 'var(--font-playfair)',
+                              fontSize: 18,
+                              fontWeight: 900,
+                              color: isChamp ? '#b8862b' : '#1a1612',
+                            }}
+                          >
+                            {isChamp ? 'C' : String(r.rank).padStart(2, '0')}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <Link
+                              href={r.fighter_slug ? `/fighter/${r.fighter_slug}` : '#'}
+                              className="block truncate hover:text-accent transition-colors"
+                              style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, fontSize: 14, color: '#1a1612' }}
+                            >
+                              {r.fighter_name}
+                            </Link>
+                            <span className="font-mono text-[10px] text-muted">
+                              {r.elo != null ? Math.round(r.elo) : '—'}
+                              {diff !== null && (
+                                <span className="ml-2" style={{ color: diff > 0 ? '#a82e1c' : '#2f6b3a' }}>
+                                  ELO {diff > 0 ? '+' : ''}{diff}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
 
-                {/* ELO Band Chart */}
-                <div>
-                  <p className="font-mono text-[10px] tracking-widest uppercase text-muted mb-4">
-                    ELO Rankings (Top {bandRows.length})
-                  </p>
-                  <BandChart rows={bandRows} />
+                {/* Connector legend */}
+                <div className="flex gap-6 mt-3 pt-3 border-t border-rule">
+                  <span className="flex items-center gap-2 font-mono text-[10px] text-muted">
+                    <svg width={24} height={8}><line x1={0} y1={4} x2={24} y2={4} stroke="#2f6b3a" strokeWidth={1} /></svg>
+                    Rankings agree
+                  </span>
+                  <span className="flex items-center gap-2 font-mono text-[10px] text-muted">
+                    <svg width={24} height={8}><line x1={0} y1={4} x2={24} y2={4} stroke="#a82e1c" strokeWidth={1.5} strokeDasharray="3 3" /></svg>
+                    Rankings disagree
+                  </span>
+                  <span className="flex items-center gap-2 font-mono text-[10px]" style={{ color: '#a82e1c' }}>
+                    <span>UNRANKED ★</span>
+                    Algorithmic snub
+                  </span>
                 </div>
               </div>
             )

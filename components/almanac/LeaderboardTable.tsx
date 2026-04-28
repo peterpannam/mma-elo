@@ -80,8 +80,8 @@ export default function LeaderboardTable({
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b-2 border-ink">
-            <th className="pb-2 text-left font-mono text-[10px] tracking-widest uppercase text-muted w-10">#</th>
-            <th className="pb-2 text-left font-mono text-[10px] tracking-widest uppercase text-muted">Fighter</th>
+            <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted w-10">#</th>
+            <th className="pb-2 text-left font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Fighter</th>
             {showWeightClass && (
               <th className="pb-2 text-left font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Div</th>
             )}
@@ -100,24 +100,34 @@ export default function LeaderboardTable({
             <tr
               key={`${row.fighter_id}-${'weight_class' in row ? row.weight_class : 'p4p'}`}
               className="border-b border-rule hover:bg-surface transition-colors"
+              style={i === 0 ? { background: 'linear-gradient(to right, #e8d5c9 0%, transparent 60%)' } : undefined}
             >
-              <td className="font-sans font-semibold text-ink py-2.5 text-[18px] w-10">
-                {i + 1}
+              <td
+                className="py-2.5 text-right w-10 leading-none"
+                style={{
+                  fontFamily: 'var(--font-playfair)',
+                  fontSize: 20,
+                  fontWeight: 900,
+                  color: i < 3 ? '#a82e1c' : '#1a1612',
+                }}
+              >
+                {String(i + 1).padStart(2, '0')}
               </td>
-              <td className="py-2.5 pr-3">
+              <td className="py-2.5 pl-3 pr-3">
                 <span className="inline-flex items-center gap-2">
                   <Link
                     href={`/fighter/${row.fighter_slug}`}
-                    className="font-sans font-semibold text-ink text-[18px] hover:text-accent transition-colors"
+                    className="hover:text-accent transition-colors"
+                    style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, fontSize: 16, color: '#1a1612' }}
                   >
                     {row.fighter_name}
                   </Link>
                   {championIds.includes(row.fighter_id) && (
                     <span
-                      className="font-mono text-[9px] font-bold tracking-wide px-1 py-px rounded-sm shrink-0"
-                      style={{ background: '#c9941a', color: '#fff' }}
+                      className="font-mono text-[9px] font-bold tracking-wide px-1 py-px shrink-0"
+                      style={{ background: '#b8862b', color: '#fff' }}
                     >
-                      CHAMP
+                      ★ CHAMP
                     </span>
                   )}
                 </span>
@@ -173,6 +183,12 @@ export default function LeaderboardTable({
           )}
         </tbody>
       </table>
+      <div className="mt-4 pt-3 border-t border-rule flex justify-between font-mono text-[10px] text-muted">
+        <span className="italic" style={{ fontFamily: 'var(--font-source-serif)' }}>
+          Click any name to examine the fighter&apos;s ELO arc.
+        </span>
+        <span className="tracking-widest uppercase">ELO Leaderboard</span>
+      </div>
     </div>
   )
 }

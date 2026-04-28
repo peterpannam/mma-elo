@@ -209,7 +209,7 @@ export default async function FighterProfilePage({
                         <th className="pb-2 text-left font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Opponent</th>
                         <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Result</th>
                         <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Method</th>
-                        <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted pl-3">ELO</th>
+                        <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted pl-3">ELO before → after</th>
                         <th className="pb-2 text-right font-mono text-[10px] tracking-widest uppercase text-muted pl-3">Δ</th>
                       </tr>
                     </thead>
@@ -253,8 +253,10 @@ export default async function FighterProfilePage({
                                 <span className="font-mono text-[10px] text-muted ml-1">R{fight.round}</span>
                               )}
                             </td>
-                            <td className="py-2.5 pl-3 text-right font-mono text-xs text-ink">
-                              {Math.round(entry.elo_after)}
+                            <td className="py-2.5 pl-3 text-right font-mono text-xs text-ink whitespace-nowrap">
+                              <span className="text-muted">{Math.round(entry.elo_before)}</span>
+                              <span className="text-muted mx-1">→</span>
+                              <b>{Math.round(entry.elo_after)}</b>
                             </td>
                             <td className="py-2.5 pl-3 text-right">
                               <Delta value={entry.delta} />
