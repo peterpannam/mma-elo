@@ -112,7 +112,7 @@ export function Sparkline({ values, id }: { values: number[]; id: string }) {
 
   const trending = values[values.length - 1] >= values[values.length - 2]
   const color = trending ? '#2f6b3a' : '#a82e1c'
-  const gradId = `sg-${id.replace(/\s+/g, '-')}`
+  const gradId = `sg-${id.replace(/[^a-zA-Z0-9]/g, '-')}`
 
   return (
     <svg width={W} height={H} overflow="visible" aria-hidden="true">

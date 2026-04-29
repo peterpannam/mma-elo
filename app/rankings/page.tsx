@@ -45,12 +45,12 @@ export default async function RankingsPage({
     <div>
       {/* Editorial header */}
       <div className="mb-6">
-        <Kicker>§ III · A disagreement</Kicker>
+        <Kicker>Whos right?</Kicker>
         <h1
           className="mt-1.5 leading-tight"
           style={{ fontFamily: 'var(--font-playfair)', fontWeight: 900, fontSize: 'clamp(24px, 4vw, 34px)' }}
         >
-          When the record disagrees with the rankers
+          The official rankings against calculated ELO 
         </h1>
         <p className="text-sm text-muted italic mt-2" style={{ maxWidth: 720, fontFamily: 'var(--font-source-serif)' }}>
           Two columns, one division. On the left: our ELO leaderboard, built from nothing but outcomes.
@@ -98,7 +98,7 @@ export default async function RankingsPage({
           )}
 
           {data.official.length > 0 && (() => {
-            const ROWS = Math.min(10, Math.max(data!.eloTop.length, data!.official.length))
+            const ROWS = Math.min(16, Math.max(data!.eloTop.length, data!.official.length))
             const eloList = data!.eloTop.slice(0, ROWS)
             const offList = data!.official.slice(0, ROWS)
             const ROW_H = 56
@@ -109,8 +109,8 @@ export default async function RankingsPage({
             const paths = eloList.map((f, eloIdx) => {
               const offIdx = offList.findIndex(r => r.fighter_id === f.fighter_id)
               if (offIdx === -1) return null
-              const y1 = eloIdx * ROW_H + ROW_H / 2
-              const y2 = offIdx * ROW_H + ROW_H / 2
+              const y1 = offIdx * ROW_H + ROW_H / 2
+              const y2 = eloIdx * ROW_H + ROW_H / 2
               const agrees = eloIdx === offIdx
               return { y1, y2, agrees }
             })
@@ -127,6 +127,77 @@ export default async function RankingsPage({
             return (
               <div className="mb-10 overflow-x-auto">
                 <div className="flex gap-0" style={{ minWidth: 480 }}>
+                  {/* Official column */}
+                  <div className="flex-1 min-w-0">
+                    {colHeader('By official rank')}
+                    {offList.map((r, i) => {
+                      const eloIdx = eloList.findIndex(e => e.fighter_id === r.fighter_id)
+                      const isChamp = r.rank === 0
+                      const eloDiff = eloIdx !== -1 && eloIdx !== i ? eloIdx - i : null
+                      return (
+                        <div
+                          key={r.id}
+                          className="flex items-center gap-2.5 border-b border-rule px-3.5"
+                          style={{ height: ROW_H }}
+                        >
+                          <span
+                            className="shrink-0 w-8 text-right leading-none"
+                            style={{
+                              fontFamily: 'var(--font-playfair)',
+                              fontSize: 20,
+                              fontWeight: 900,
+                              color: isChamp ? '#b8862b' : '#1a1612',
+                            }}
+                          >
+                            {isChamp ? 'C' : String(r.rank).padStart(2, '0')}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <Link
+                              href={r.fighter_slug ? `/fighter/${r.fighter_slug}` : '#'}
+                              className="block truncate hover:text-accent transition-colors"
+                              style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, fontSize: 14, color: '#1a1612' }}
+                            >
+                              {r.fighter_name}
+                            </Link>
+                            <span className="font-mono text-[10px]" style={{ color: '#6b655b' }}>
+                              {r.elo != null ? `ELO ${Math.round(r.elo)}` : '—'}
+                              {eloIdx >= 0 && (
+                                <span className="ml-2">· ELO rank #{eloIdx + 1}</span>
+                              )}
+                              {eloDiff !== null && (
+                                <span className="ml-2" style={{ color: eloDiff > 0 ? '#a82e1c' : '#2f6b3a' }}>
+                                  Δ {eloDiff > 0 ? '+' : ''}{eloDiff}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>                  
+
+                  {/* Connector SVG */}
+                  <div className="shrink-0" style={{ width: CONN_W }}>
+                    <div style={{ height: HEADER_H }} />
+                    <svg width={CONN_W} height={svgH} className="block">
+                      {paths.map((p, i) => {
+                        if (!p) return null
+                        const { y1, y2, agrees } = p
+                        return (
+                          <path
+                            key={i}
+                            d={`M 0 ${y1} C ${CONN_W / 2} ${y1}, ${CONN_W / 2} ${y2}, ${CONN_W} ${y2}`}
+                            fill="none"
+                            stroke={agrees ? '#2f6b3a' : '#a82e1c'}
+                            strokeWidth={agrees ? 1 : 1.5}
+                            strokeDasharray={agrees ? '0' : '3 3'}
+                            opacity={0.6}
+                          />
+                        )
+                      })}
+                    </svg>
+                  </div>
+
                   {/* ELO column */}
                   <div className="flex-1 min-w-0">
                     {colHeader('By ELO (computed)')}
@@ -179,76 +250,8 @@ export default async function RankingsPage({
                     })}
                   </div>
 
-                  {/* Connector SVG */}
-                  <div className="shrink-0" style={{ width: CONN_W }}>
-                    <div style={{ height: HEADER_H }} />
-                    <svg width={CONN_W} height={svgH} className="block">
-                      {paths.map((p, i) => {
-                        if (!p) return null
-                        const { y1, y2, agrees } = p
-                        return (
-                          <path
-                            key={i}
-                            d={`M 0 ${y1} C ${CONN_W / 2} ${y1}, ${CONN_W / 2} ${y2}, ${CONN_W} ${y2}`}
-                            fill="none"
-                            stroke={agrees ? '#2f6b3a' : '#a82e1c'}
-                            strokeWidth={agrees ? 1 : 1.5}
-                            strokeDasharray={agrees ? '0' : '3 3'}
-                            opacity={0.6}
-                          />
-                        )
-                      })}
-                    </svg>
-                  </div>
 
-                  {/* Official column */}
-                  <div className="flex-1 min-w-0">
-                    {colHeader('By official rank')}
-                    {offList.map((r, i) => {
-                      const eloIdx = eloList.findIndex(e => e.fighter_id === r.fighter_id)
-                      const isChamp = r.rank === 0
-                      const eloDiff = eloIdx !== -1 && eloIdx !== i ? eloIdx - i : null
-                      return (
-                        <div
-                          key={r.id}
-                          className="flex items-center gap-2.5 border-b border-rule px-3.5"
-                          style={{ height: ROW_H }}
-                        >
-                          <span
-                            className="shrink-0 w-8 text-right leading-none"
-                            style={{
-                              fontFamily: 'var(--font-playfair)',
-                              fontSize: 20,
-                              fontWeight: 900,
-                              color: isChamp ? '#b8862b' : '#1a1612',
-                            }}
-                          >
-                            {isChamp ? 'C' : String(r.rank).padStart(2, '0')}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <Link
-                              href={r.fighter_slug ? `/fighter/${r.fighter_slug}` : '#'}
-                              className="block truncate hover:text-accent transition-colors"
-                              style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700, fontSize: 14, color: '#1a1612' }}
-                            >
-                              {r.fighter_name}
-                            </Link>
-                            <span className="font-mono text-[10px]" style={{ color: '#6b655b' }}>
-                              {r.elo != null ? `ELO ${Math.round(r.elo)}` : '—'}
-                              {eloIdx >= 0 && (
-                                <span className="ml-2">· ELO rank #{eloIdx + 1}</span>
-                              )}
-                              {eloDiff !== null && (
-                                <span className="ml-2" style={{ color: eloDiff > 0 ? '#a82e1c' : '#2f6b3a' }}>
-                                  Δ {eloDiff > 0 ? '+' : ''}{eloDiff}
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
+
                 </div>
 
                 {/* Connector legend */}
