@@ -41,7 +41,7 @@ export default async function FighterIndexPage() {
       {fetchError ? (
         <p className="font-mono text-xs text-accent">{fetchError}</p>
       ) : (
-        <FighterSearch fighters={fighters} />
+        <FighterSearch initialFighters={fighters} />
       )}
     </div>
   )
