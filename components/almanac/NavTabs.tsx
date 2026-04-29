@@ -6,10 +6,9 @@ import { usePathname } from 'next/navigation'
 const TABS = [
   { href: '/leaderboard', label: 'Leaderboard' },
   { href: '/latest',      label: 'Latest Event' },
-  { href: '/fighter',     label: 'Fighter' },
   { href: '/rankings',    label: 'ELO vs Official' },
-  { href: '/trends',      label: 'Div. Trends' },
-  { href: '/compare',     label: 'Compare' },
+  { href: '/trends',      label: 'Division Trends' },
+  { href: '/fighter',     label: 'Search & Compare' },
 ]
 
 export default function NavTabs() {
