@@ -27,6 +27,57 @@ function formatDate(ts: number) {
   return new Date(ts).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
+// Monotone cubic interpolation (Fritsch-Carlson) — smooth curves that never overshoot
+// or loop back between data points, which catmull-rom can do on steep changes.
+function smoothPath(pts: Array<{ x: number; y: number }>): string {
+  const n = pts.length
+  if (n < 2) return ''
+
+  // Secant slopes between adjacent points
+  const delta: number[] = []
+  for (let i = 0; i < n - 1; i++) {
+    const dx = pts[i + 1].x - pts[i].x
+    delta.push(dx === 0 ? 0 : (pts[i + 1].y - pts[i].y) / dx)
+  }
+
+  // Initial tangents: average of neighbouring secants
+  const m: number[] = new Array(n)
+  m[0] = delta[0]
+  m[n - 1] = delta[n - 2]
+  for (let i = 1; i < n - 1; i++) {
+    m[i] = delta[i - 1] * delta[i] <= 0 ? 0 : (delta[i - 1] + delta[i]) / 2
+  }
+
+  // Enforce monotonicity
+  for (let i = 0; i < n - 1; i++) {
+    if (Math.abs(delta[i]) < 1e-10) {
+      m[i] = m[i + 1] = 0
+    } else {
+      const a = m[i] / delta[i]
+      const b = m[i + 1] / delta[i]
+      const h = Math.sqrt(a * a + b * b)
+      if (h > 3) {
+        m[i] = (3 * delta[i] * a) / h
+        m[i + 1] = (3 * delta[i] * b) / h
+      }
+    }
+  }
+
+  // Build SVG cubic bezier path
+  const d: string[] = [`M ${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`]
+  for (let i = 0; i < n - 1; i++) {
+    const dx = pts[i + 1].x - pts[i].x
+    const cp1x = pts[i].x + dx / 3
+    const cp1y = pts[i].y + (m[i] * dx) / 3
+    const cp2x = pts[i + 1].x - dx / 3
+    const cp2y = pts[i + 1].y - (m[i + 1] * dx) / 3
+    d.push(
+      `C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${pts[i + 1].x.toFixed(1)},${pts[i + 1].y.toFixed(1)}`
+    )
+  }
+  return d.join(' ')
+}
+
 export default function LineChart({
   series,
   height = 280,
@@ -40,11 +91,9 @@ export default function LineChart({
   yMax?: number
   annotations?: ChartAnnotation[]
 }) {
-  const [tooltip, setTooltip] = useState<{
-    x: number; y: number; label: string
-  } | null>(null)
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; label: string } | null>(null)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
 
-  // Measure container so viewBox always matches actual pixel width — no letterboxing.
   const containerRef = useRef<HTMLDivElement>(null)
   const [W, setW] = useState(600)
   useEffect(() => {
@@ -78,7 +127,6 @@ export default function LineChart({
   const xRange = xMax - xMin || 1
   const yRange = yMax - yMin || 1
 
-  // SVG inner dimensions — W is now the measured container width
   const H = height - MARGIN.top - MARGIN.bottom
 
   function toSvgX(ts: number) {
@@ -88,14 +136,12 @@ export default function LineChart({
     return MARGIN.top + (1 - (val - yMin) / yRange) * H
   }
 
-  // Y-axis ticks (every ~50 ELO)
   const yStep = Math.ceil((yMax - yMin) / 5 / 50) * 50
   const yTicks: number[] = []
   for (let v = Math.ceil(yMin / yStep) * yStep; v <= yMax; v += yStep) {
     yTicks.push(v)
   }
 
-  // X-axis ticks (yearly)
   const startYear = new Date(xMin).getFullYear()
   const endYear = new Date(xMax).getFullYear()
   const xTicks: number[] = []
@@ -103,33 +149,30 @@ export default function LineChart({
     xTicks.push(new Date(yr, 0, 1).getTime())
   }
 
+  // Hide per-point dots when series are dense — avoids visual noise on trend charts
+  const maxPoints = Math.max(...series.map(s => s.points.length))
+  const showDots = maxPoints <= 36
+
   return (
     <div ref={containerRef} className="relative w-full" style={{ maxWidth: '100%' }}>
       <svg
         viewBox={`0 0 ${W} ${height}`}
         className="w-full"
         style={{ height }}
-        onMouseLeave={() => setTooltip(null)}
+        onMouseLeave={() => { setTooltip(null); setHoveredId(null) }}
       >
         {/* Y gridlines */}
         {yTicks.map(v => (
           <g key={v}>
             <line
-              x1={MARGIN.left}
-              x2={W - MARGIN.right}
-              y1={toSvgY(v)}
-              y2={toSvgY(v)}
-              stroke="#c8bfb0"
-              strokeWidth="0.5"
+              x1={MARGIN.left} x2={W - MARGIN.right}
+              y1={toSvgY(v)} y2={toSvgY(v)}
+              stroke="#c8bfb0" strokeWidth="0.5"
             />
             <text
-              x={MARGIN.left - 6}
-              y={toSvgY(v)}
-              textAnchor="end"
-              dominantBaseline="middle"
-              fontSize={9}
-              fill="#7a7065"
-              fontFamily="monospace"
+              x={MARGIN.left - 6} y={toSvgY(v)}
+              textAnchor="end" dominantBaseline="middle"
+              fontSize={9} fill="#7a7065" fontFamily="monospace"
             >
               {v}
             </text>
@@ -140,25 +183,18 @@ export default function LineChart({
         {xTicks.map(ts => {
           const sx = toSvgX(ts)
           if (sx < MARGIN.left || sx > W - MARGIN.right) return null
-          const yr = new Date(ts).getFullYear()
           return (
             <g key={ts}>
               <line
                 x1={sx} x2={sx}
-                y1={MARGIN.top + H}
-                y2={MARGIN.top + H + 4}
-                stroke="#c8bfb0"
-                strokeWidth="1"
+                y1={MARGIN.top + H} y2={MARGIN.top + H + 4}
+                stroke="#c8bfb0" strokeWidth="1"
               />
               <text
-                x={sx}
-                y={MARGIN.top + H + 14}
-                textAnchor="middle"
-                fontSize={9}
-                fill="#7a7065"
-                fontFamily="monospace"
+                x={sx} y={MARGIN.top + H + 14}
+                textAnchor="middle" fontSize={9} fill="#7a7065" fontFamily="monospace"
               >
-                {yr}
+                {new Date(ts).getFullYear()}
               </text>
             </g>
           )
@@ -185,10 +221,7 @@ export default function LineChart({
               key={i}
               x1={sx} x2={sx}
               y1={MARGIN.top} y2={MARGIN.top + H}
-              stroke={ann.color}
-              strokeWidth="1"
-              strokeDasharray="3 3"
-              opacity={0.45}
+              stroke={ann.color} strokeWidth="1" strokeDasharray="3 3" opacity={0.45}
               style={{ cursor: 'pointer' }}
               onMouseEnter={() => setTooltip({ x: sx, y: MARGIN.top + 8, label: ann.label })}
               onMouseLeave={() => setTooltip(null)}
@@ -196,47 +229,64 @@ export default function LineChart({
           )
         })}
 
-        {/* Series lines */}
+        {/* Series: smooth bezier path + invisible wide hit target for hover */}
         {series.map(s => {
-          if (s.points.length < 2) return null
-          const pts = s.points
-            .map(p => `${toSvgX(p.x).toFixed(1)},${toSvgY(p.y).toFixed(1)}`)
-            .join(' ')
+          const svgPts = s.points.map(p => ({ x: toSvgX(p.x), y: toSvgY(p.y) }))
+          const pathD = smoothPath(svgPts)
+          const isHovered = hoveredId === s.id
+          const isFaded = hoveredId !== null && !isHovered
           return (
-            <polyline
+            <g
               key={s.id}
-              points={pts}
-              fill="none"
-              stroke={s.color}
-              strokeWidth="1.75"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
+              style={{ opacity: isFaded ? 0.12 : 1, transition: 'opacity 0.15s ease' }}
+            >
+              <path
+                d={pathD}
+                fill="none"
+                stroke={s.color}
+                strokeWidth={isHovered ? 2.5 : 1.75}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+              {/* Wider transparent stroke as hover hit area */}
+              <path
+                d={pathD}
+                fill="none"
+                stroke="transparent"
+                strokeWidth={14}
+                style={{ cursor: 'pointer' }}
+                onMouseEnter={() => setHoveredId(s.id)}
+                onMouseLeave={() => setHoveredId(null)}
+              />
+            </g>
           )
         })}
 
-        {/* Dots + hit targets */}
-        {series.map(s =>
+        {/* Per-point dots — only on sparse charts (fighter pages, head-to-head) */}
+        {showDots && series.map(s =>
           s.points.map((p, i) => {
             const sx = toSvgX(p.x)
             const sy = toSvgY(p.y)
+            const isFaded = hoveredId !== null && hoveredId !== s.id
             return (
               <circle
                 key={`${s.id}-${i}`}
-                cx={sx}
-                cy={sy}
-                r={3}
-                fill={s.color}
-                stroke="#f3ede3"
-                strokeWidth="1.5"
-                style={{ cursor: 'pointer' }}
-                onMouseEnter={() =>
+                cx={sx} cy={sy} r={2.5}
+                fill={s.color} stroke="#f3ede3" strokeWidth="1.5"
+                style={{
+                  cursor: 'pointer',
+                  opacity: isFaded ? 0.12 : 1,
+                  transition: 'opacity 0.15s ease',
+                }}
+                onMouseEnter={() => {
+                  setHoveredId(s.id)
                   setTooltip({
                     x: sx,
                     y: sy,
                     label: p.label ?? `${formatDate(p.x)}: ${Math.round(p.y)}`,
                   })
-                }
+                }}
+                onMouseLeave={() => setTooltip(null)}
               />
             )
           })
@@ -244,17 +294,14 @@ export default function LineChart({
 
         {/* Tooltip */}
         {tooltip && (() => {
-          const boxW = 140, boxH = 28
+          const boxW = 200, boxH = 28
           const bx = Math.min(Math.max(tooltip.x - boxW / 2, 2), W - boxW - 2)
           const by = tooltip.y - boxH - 10 < MARGIN.top
             ? tooltip.y + 10
             : tooltip.y - boxH - 10
           return (
             <g pointerEvents="none">
-              <rect
-                x={bx} y={by} width={boxW} height={boxH}
-                rx={2} fill="#1a1612" opacity={0.88}
-              />
+              <rect x={bx} y={by} width={boxW} height={boxH} rx={2} fill="#1a1612" opacity={0.88} />
               <text
                 x={bx + boxW / 2} y={by + boxH / 2}
                 textAnchor="middle" dominantBaseline="middle"
@@ -267,14 +314,22 @@ export default function LineChart({
         })()}
       </svg>
 
-      {/* Legend (if multiple series) */}
+      {/* Legend — hover to highlight that series */}
       {series.length > 1 && (
         <div className="flex flex-wrap gap-3 mt-2 ml-12">
           {series.map(s => (
-            <span key={s.id} className="inline-flex items-center gap-1.5 font-mono text-[10px] text-muted">
-              <span
-                style={{ width: 16, height: 2, backgroundColor: s.color, display: 'inline-block' }}
-              />
+            <span
+              key={s.id}
+              className="inline-flex items-center gap-1.5 font-mono text-[10px] text-muted"
+              style={{
+                opacity: hoveredId && hoveredId !== s.id ? 0.3 : 1,
+                transition: 'opacity 0.15s ease',
+                cursor: 'default',
+              }}
+              onMouseEnter={() => setHoveredId(s.id)}
+              onMouseLeave={() => setHoveredId(null)}
+            >
+              <span style={{ width: 16, height: 2, backgroundColor: s.color, display: 'inline-block' }} />
               {s.name}
             </span>
           ))}

@@ -247,19 +247,59 @@ export async function getRankingsWithElo(weightClass: string, mode: 'active' | '
 }
 
 export async function getDivisionTrends(weightClasses?: string[]): Promise<DivisionTrend[]> {
-  let query = supabase
-    .from('division_elo_trend')
-    .select('*')
-    .order('month')
-    .range(0, 4999)
+  // PostgREST caps responses at 1000 rows regardless of the Range header,
+  // so we paginate and concatenate to get the full dataset.
+  const PAGE = 1000
+  const all: DivisionTrend[] = []
+  let from = 0
 
-  if (weightClasses?.length) {
-    query = query.in('weight_class', weightClasses)
+  while (true) {
+    let query = supabase
+      .from('division_elo_trend')
+      .select('*')
+      .order('month')
+      .range(from, from + PAGE - 1)
+
+    if (weightClasses?.length) {
+      query = query.in('weight_class', weightClasses)
+    }
+
+    const { data, error } = await query
+    if (error) throw error
+    if (!data || data.length === 0) break
+    all.push(...(data as DivisionTrend[]))
+    if (data.length < PAGE) break
+    from += PAGE
   }
 
-  const { data, error } = await query
-  if (error) throw error
-  return data as DivisionTrend[]
+  return all
+}
+
+export async function getDivisionFighterCounts(): Promise<Record<string, number>> {
+  // current_elo has exactly one row per (fighter, weight_class), so counting
+  // rows per division gives all-time distinct fighters without needing elo_history.
+  const PAGE = 1000
+  const all: { weight_class: string }[] = []
+  let from = 0
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('current_elo')
+      .select('weight_class')
+      .range(from, from + PAGE - 1)
+
+    if (error) throw error
+    if (!data || data.length === 0) break
+    all.push(...data)
+    if (data.length < PAGE) break
+    from += PAGE
+  }
+
+  const counts: Record<string, number> = {}
+  for (const row of all) {
+    counts[row.weight_class] = (counts[row.weight_class] ?? 0) + 1
+  }
+  return counts
 }
 
 export async function getTitleFights(): Promise<TitleFight[]> {

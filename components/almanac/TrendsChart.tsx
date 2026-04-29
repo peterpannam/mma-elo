@@ -4,7 +4,17 @@ import { useState, useMemo } from 'react'
 import type { DivisionTrend, TitleFight } from '@/lib/types'
 import { DIVISION_COLORS, WEIGHT_CLASS_ABBR, WEIGHT_CLASSES } from './Atoms'
 import LineChart from './LineChart'
-import type { ChartSeries, ChartAnnotation } from './LineChart'
+import type { ChartPoint, ChartSeries, ChartAnnotation } from './LineChart'
+
+// Symmetric rolling average — smooths month-to-month noise without distorting the trend shape
+function rollingAvg(points: ChartPoint[], window: number): ChartPoint[] {
+  const half = Math.floor(window / 2)
+  return points.map((p, i) => {
+    const slice = points.slice(Math.max(0, i - half), Math.min(points.length, i + half + 1))
+    const avg = slice.reduce((s, pt) => s + pt.y, 0) / slice.length
+    return { ...p, y: Math.round(avg * 10) / 10 }
+  })
+}
 
 const DEFAULT_VISIBLE = ['Middleweight', 'Welterweight', 'Lightweight', 'Light Heavyweight']
 
@@ -44,19 +54,20 @@ export default function TrendsChart({
 
   const series: ChartSeries[] = useMemo(() => {
     return [...visible].map(wc => {
-      const pts = trends
+      const raw = trends
         .filter(t => t.weight_class === wc)
         .sort((a, b) => (a.month < b.month ? -1 : 1))
         .map(t => ({
           x: new Date(t.month).getTime(),
           y: t.avg_elo,
+          // Label keeps the original monthly value so the tooltip is honest
           label: `${WEIGHT_CLASS_ABBR[wc] ?? wc} · ${t.month.slice(0, 7)}: avg ${t.avg_elo} (${t.fighter_count} fighters)`,
         }))
       return {
         id: wc,
         name: WEIGHT_CLASS_ABBR[wc] ?? wc,
         color: DIVISION_COLORS[wc] ?? '#7a7065',
-        points: pts,
+        points: rollingAvg(raw, 3),
       }
     })
   }, [trends, visible])
