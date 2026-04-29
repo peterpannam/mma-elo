@@ -20,8 +20,7 @@ export async function getLeaderboard(
       .from(table)
       .select('*')
       .eq('weight_class', weightClass)
-      .order('elo', { ascending: false })
-      .limit(200),
+      .order('elo', { ascending: false }),
     supabase
       .from('fighter_division_stats')
       .select('fighter_id, peak_elo, wins, losses, draws, last_5_deltas, trend_5, date_of_birth')
@@ -46,18 +45,26 @@ export async function getP4PLeaderboard(
     .from(table)
     .select('*')
     .order('elo', { ascending: false })
-    .limit(200)
   if (eloError) throw eloError
 
-  const ids = (eloData as CurrentP4P[]).map(r => r.fighter_id)
   type CareerStats = { fighter_id: string; peak_elo: number | null; wins: number; losses: number; draws: number; last_5_deltas: number[] | null; trend_5: number; date_of_birth: string | null }
-  const { data: statsData } = await supabase
-    .from('fighter_career_stats')
-    .select('fighter_id, peak_elo, wins, losses, draws, last_5_deltas, trend_5, date_of_birth')
-    .in('fighter_id', ids)
+  const ids = (eloData as CurrentP4P[]).map(r => r.fighter_id)
+  const BATCH = 150
+  const batches = Array.from({ length: Math.ceil(ids.length / BATCH) }, (_, i) =>
+    ids.slice(i * BATCH, (i + 1) * BATCH)
+  )
+  const batchResults = await Promise.all(
+    batches.map(chunk =>
+      supabase
+        .from('fighter_career_stats')
+        .select('fighter_id, peak_elo, wins, losses, draws, last_5_deltas, trend_5, date_of_birth')
+        .in('fighter_id', chunk)
+    )
+  )
+  const statsData = batchResults.flatMap(r => r.data ?? [])
 
   const statsMap = Object.fromEntries(
-    ((statsData ?? []) as CareerStats[]).map(s => [s.fighter_id, s])
+    (statsData as CareerStats[]).map(s => [s.fighter_id, s])
   )
   return (eloData as CurrentP4P[]).map(row => ({
     ...row,

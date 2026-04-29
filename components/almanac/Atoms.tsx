@@ -61,7 +61,7 @@ export function Silhouette({ size = 32 }: { size?: number }) {
 }
 
 export function FormDots({ deltas }: { deltas: number[] }) {
-  const dots = deltas.slice(0, 5)
+  const dots = deltas.slice(0, 5).reverse()
   return (
     <span className="inline-flex gap-[3px] items-center">
       {dots.map((d, i) => (

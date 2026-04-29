@@ -58,6 +58,8 @@ export default function LeaderboardTable({
 }) {
   const [sortKey, setSortKey] = useState<SortKey>('elo')
   const [sortAsc, setSortAsc] = useState(false)
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 50
 
   const sorted = [...rows].sort((a, b) => {
     let diff = 0
@@ -71,8 +73,11 @@ export default function LeaderboardTable({
   function toggle(key: SortKey) {
     if (sortKey === key) setSortAsc(v => !v)
     else { setSortKey(key); setSortAsc(false) }
+    setPage(1)
   }
 
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
+  const pageRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const colHeadProps = { sortKey, sortAsc, onToggle: toggle }
 
   return (
@@ -96,11 +101,13 @@ export default function LeaderboardTable({
           </tr>
         </thead>
         <tbody>
-          {sorted.map((row, i) => (
+          {pageRows.map((row, i) => {
+            const globalIndex = (page - 1) * PAGE_SIZE + i
+            return (
             <tr
               key={`${row.fighter_id}-${'weight_class' in row ? row.weight_class : 'p4p'}`}
               className="border-b border-rule hover:bg-surface transition-colors"
-              style={i === 0 ? { background: 'linear-gradient(to right, #e8d5c9 0%, transparent 60%)' } : undefined}
+              style={globalIndex === 0 ? { background: 'linear-gradient(to right, #e8d5c9 0%, transparent 60%)' } : undefined}
             >
               <td
                 className="py-2.5 text-right w-10 leading-none"
@@ -108,10 +115,10 @@ export default function LeaderboardTable({
                   fontFamily: 'var(--font-playfair)',
                   fontSize: 20,
                   fontWeight: 900,
-                  color: i < 3 ? '#a82e1c' : '#1a1612',
+                  color: globalIndex < 3 ? '#a82e1c' : '#1a1612',
                 }}
               >
-                {String(i + 1).padStart(2, '0')}
+                {String(globalIndex + 1).padStart(2, '0')}
               </td>
               <td className="py-2.5 pl-3 pr-3">
                 <span className="inline-flex items-center gap-2">
@@ -173,7 +180,8 @@ export default function LeaderboardTable({
                 <Delta value={row.delta} />
               </td>
             </tr>
-          ))}
+            )
+          })}
           {sorted.length === 0 && (
             <tr>
               <td colSpan={11} className="py-8 text-center text-muted font-mono text-xs">
@@ -183,10 +191,31 @@ export default function LeaderboardTable({
           )}
         </tbody>
       </table>
-      <div className="mt-4 pt-3 border-t border-rule flex justify-between font-mono text-[10px] text-muted">
+      <div className="mt-4 pt-3 border-t border-rule flex items-center justify-between font-mono text-[10px] text-muted">
         <span className="italic" style={{ fontFamily: 'var(--font-source-serif)' }}>
           Click any name to examine the fighter&apos;s ELO arc.
         </span>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="text-ink text-[11px] tracking-widest uppercase hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              ← Prev
+            </button>
+            <span className="text-ink text-[11px] tracking-widest uppercase">
+              {page} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="text-ink text-[11px] tracking-widest uppercase hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Next →
+            </button>
+          </div>
+        )}
         <span className="tracking-widest uppercase">ELO Leaderboard</span>
       </div>
     </div>
