@@ -3,6 +3,8 @@ import { Playfair_Display, JetBrains_Mono, Source_Serif_4 } from 'next/font/goog
 import './globals.css'
 import NavTabs from '@/components/almanac/NavTabs'
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
+import Script from 'next/script'
 
 const playfair = Playfair_Display({
   variable: '--font-playfair',
@@ -79,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </p>
           </div>
           <SpeedInsights/>
+          <Analytics/>
         </footer>
       </body>
     </html>

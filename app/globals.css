@@ -21,3 +21,10 @@ body {
   background-color: #f3ede3;
   color: #1a1612;
 }
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

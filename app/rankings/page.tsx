@@ -82,7 +82,7 @@ export default async function RankingsPage({
             const eloList = data!.eloTop.slice(0, ROWS)
             const offList = data!.official.slice(0, ROWS)
             const ROW_H = 56
-            const CONN_W = 120
+            const CONN_W = 64
             const svgH = ROWS * ROW_H
             const HEADER_H = 38
 
@@ -105,8 +105,8 @@ export default async function RankingsPage({
             )
 
             return (
-              <div className="mb-10 overflow-x-auto">
-                <div className="flex gap-0" style={{ minWidth: 480 }}>
+              <div className="mb-10">
+                <div className="flex gap-0">
                   {/* Official column */}
                   <div className="flex-1 min-w-0">
                     {colHeader('By official rank')}
@@ -161,17 +161,18 @@ export default async function RankingsPage({
                     <div style={{ height: HEADER_H }} />
                     <svg width={CONN_W} height={svgH} className="block">
                       {paths.map((p, i) => {
-                        if (!p) return null
-                        const { y1, y2, agrees } = p
+                        if (!p || p.agrees) return null
+                        const { y1, y2 } = p
+                        const delta = Math.abs(y2 - y1)
                         return (
                           <path
                             key={i}
-                            d={`M 0 ${y1} C ${CONN_W / 2} ${y1}, ${CONN_W / 2} ${y2}, ${CONN_W} ${y2}`}
+                            d={`M 0 ${y1} C ${CONN_W * 0.4} ${y1}, ${CONN_W * 0.6} ${y2}, ${CONN_W} ${y2}`}
                             fill="none"
-                            stroke={agrees ? '#2f6b3a' : '#a82e1c'}
-                            strokeWidth={agrees ? 1 : 1.5}
-                            strokeDasharray={agrees ? '0' : '3 3'}
-                            opacity={0.6}
+                            stroke="#a82e1c"
+                            strokeWidth={delta > ROW_H * 2 ? 1.5 : 1}
+                            strokeDasharray="4 3"
+                            opacity={0.5}
                           />
                         )
                       })}
@@ -237,12 +238,8 @@ export default async function RankingsPage({
                 {/* Connector legend */}
                 <div className="flex gap-6 mt-3 pt-3 border-t border-rule">
                   <span className="flex items-center gap-2 font-mono text-[10px] text-muted">
-                    <svg width={24} height={8}><line x1={0} y1={4} x2={24} y2={4} stroke="#2f6b3a" strokeWidth={1} /></svg>
-                    Rankings agree
-                  </span>
-                  <span className="flex items-center gap-2 font-mono text-[10px] text-muted">
-                    <svg width={24} height={8}><line x1={0} y1={4} x2={24} y2={4} stroke="#a82e1c" strokeWidth={1.5} strokeDasharray="3 3" /></svg>
-                    Rankings disagree
+                    <svg width={24} height={8}><line x1={0} y1={4} x2={24} y2={4} stroke="#a82e1c" strokeWidth={1.5} strokeDasharray="4 3" /></svg>
+                    Rankings diverge
                   </span>
                   <span className="flex items-center gap-2 font-mono text-[10px]" style={{ color: '#a82e1c' }}>
                     <span>UNRANKED ★</span>

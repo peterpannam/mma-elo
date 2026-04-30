@@ -30,7 +30,7 @@ export default function DivisionPicker({
   return (
     <div>
       <h3 className='pb-2 font-mono text-xs text-muted mt-1'>DIVISION</h3>
-      <div className="flex flex-wrap border mb-4 border-rule">
+      <div className="flex overflow-x-auto border mb-4 border-rule scrollbar-none">
         {opts.map(wc => {
           const active = current === wc
           const isP4P = wc === 'P4P' || wc === "Women's P4P"
@@ -40,7 +40,7 @@ export default function DivisionPicker({
               key={wc}
               onClick={() => navigate(wc)}
               className={[
-                'font-mono text-[12px] tracking-wider uppercase px-2.5 py-1',
+                'font-mono text-[12px] tracking-wider uppercase px-2.5 py-1 shrink-0',
                 'border-r transition-colors cursor-pointer',
                 active
                   ? 'bg-ink text-paper border-ink'
