@@ -193,7 +193,7 @@ export default function LeaderboardTable({
       </table>
       <div className="mt-4 pt-3 border-t border-rule flex items-center justify-between font-mono text-[10px] text-muted">
         <span className="italic" style={{ fontFamily: 'var(--font-source-serif)' }}>
-          Click any name to examine the fighter&apos;s ELO arc.
+          Click any name to examine the fighter&apos;s ELO.
         </span>
         {totalPages > 1 && (
           <div className="flex items-center gap-3">

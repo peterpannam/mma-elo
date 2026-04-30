@@ -5,6 +5,8 @@ import { Kicker, WEIGHT_CLASS_ABBR, WEIGHT_CLASSES } from '@/components/almanac/
 import DivisionPicker from '@/components/almanac/DivisionPicker'
 import type { CurrentElo } from '@/lib/types'
 
+const RANKINGS_DIVISIONS = ['P4P', "Women's P4P", ...WEIGHT_CLASSES] as const
+
 export const revalidate = 3600
 
 export async function generateMetadata({
@@ -59,26 +61,7 @@ export default async function RankingsPage({
         </p>
       </div>
 
-      {/* Division picker — inline between hairlines, no P4P */}
-      <div className="border-t border-b border-rule py-1.5 mb-5 flex flex-wrap gap-0">
-        {WEIGHT_CLASSES.map(cls => {
-          const active = cls === wc
-          return (
-            <Link
-              key={cls}
-              href={`/rankings?wc=${encodeURIComponent(cls)}`}
-              className="font-mono text-[11px] tracking-widest uppercase px-3 py-1.5 transition-colors"
-              style={{
-                background: active ? '#1a1612' : 'transparent',
-                color: active ? '#f3ede3' : '#6b655b',
-                fontWeight: active ? 700 : 500,
-              }}
-            >
-              {WEIGHT_CLASS_ABBR[cls] ?? cls}
-            </Link>
-          )
-        })}
-      </div>
+      <DivisionPicker current={wc} options={RANKINGS_DIVISIONS} />
 
       {/* Division sub-label */}
       <p className="font-mono text-[10px] tracking-[0.15em] text-muted uppercase mb-4">

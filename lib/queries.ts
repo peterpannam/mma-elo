@@ -202,8 +202,10 @@ export async function getRankingsWithElo(weightClass: string, mode: 'active' | '
   eloTop: CurrentElo[]
 }> {
   const isP4P = weightClass === 'P4P' || weightClass === "Women's P4P"
-  const eloTable = isP4P
-    ? (mode === 'all' ? 'current_p4p' : 'active_p4p')
+  const eloTable = weightClass === "Women's P4P"
+    ? (mode === 'all' ? 'current_p4p_womens' : 'active_p4p_womens')
+    : weightClass === 'P4P'
+    ? (mode === 'all' ? 'current_p4p_mens' : 'active_p4p_mens')
     : (mode === 'all' ? 'current_elo' : 'active_elo')
 
   const [rankResult, eloResult] = await Promise.all([

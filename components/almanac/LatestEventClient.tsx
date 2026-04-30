@@ -76,9 +76,7 @@ function FighterSide({
         )}
       </div>
       {elo && (
-        <div
-          className={`flex items-center gap-1.5 mt-1 font-mono text-[10px] text-muted ${isRight ? 'flex-row-reverse' : 'flex-row'}`}
-        >
+        <div className="flex items-center gap-1.5 mt-1 font-mono text-[10px] text-muted">
           <span>{Math.round(elo.elo_before)}</span>
           <span>→</span>
           <span className="font-semibold text-sm" style={{ color: '#1a1612' }}>{Math.round(elo.elo_after)}</span>

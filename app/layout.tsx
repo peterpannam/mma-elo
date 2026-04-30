@@ -73,7 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="border-t border-rule mt-auto">
           <div className="max-w-480 mx-auto px-4 sm:px-6 py-4">
             <p className="font-mono text-[10px] text-muted tracking-wider">
-              Data via UFCStats.com · Rankings via UFC.com · ELO calculated with K=40 base
+              Data via UFCStats.com · Rankings via UFC.com · ELO calculated with K=40 base · <a className='underline' href='https://github.com/NBAtrev/UFC-Elo-Engine/blob/main/ufcstatswebscraper.py' target='_blank'>NBA trevs project</a> · <a className='underline' href='mailto:mma.elo.site@gmail.com' target='_blank'>Contact</a> 
             </p>
           </div>
         </footer>
