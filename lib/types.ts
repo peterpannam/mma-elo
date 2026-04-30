@@ -110,6 +110,7 @@ export interface DivisionTrend {
   month: string
   weight_class: string
   avg_elo: number
+  top_elo?: number
   fighter_count: number
 }
 

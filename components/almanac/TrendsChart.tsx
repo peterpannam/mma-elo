@@ -33,6 +33,7 @@ export default function TrendsChart({
   const [visible, setVisible] = useState<Set<string>>(
     new Set(DEFAULT_VISIBLE.filter(d => divisions.includes(d as any)))
   )
+  const [showTop1, setShowTop1] = useState(false)
 
   function toggle(wc: string) {
     setVisible(prev => {
@@ -53,29 +54,56 @@ export default function TrendsChart({
   }, [titleFights, visible])
 
   const series: ChartSeries[] = useMemo(() => {
-    return [...visible].map(wc => {
-      const raw = trends
+    const result: ChartSeries[] = []
+
+    for (const wc of visible) {
+      const rows = trends
         .filter(t => t.weight_class === wc)
         .sort((a, b) => (a.month < b.month ? -1 : 1))
-        .map(t => ({
-          x: new Date(t.month).getTime(),
-          y: t.avg_elo,
-          // Label keeps the original monthly value so the tooltip is honest
-          label: `${WEIGHT_CLASS_ABBR[wc] ?? wc} · ${t.month.slice(0, 7)}: avg ${t.avg_elo} (${t.fighter_count} fighters)`,
-        }))
-      return {
+
+      const avgPts = rows.map(t => ({
+        x: new Date(t.month).getTime(),
+        y: t.avg_elo,
+        label: `${WEIGHT_CLASS_ABBR[wc] ?? wc} · ${t.month.slice(0, 7)}: top-15 avg ${t.avg_elo} (${t.fighter_count} fighters)`,
+      }))
+
+      result.push({
         id: wc,
         name: WEIGHT_CLASS_ABBR[wc] ?? wc,
         color: DIVISION_COLORS[wc] ?? '#7a7065',
-        points: rollingAvg(raw, 3),
+        groupId: wc,
+        points: rollingAvg(avgPts, 3),
+      })
+
+      if (showTop1) {
+        const top1Pts = rows
+          .filter(t => t.top_elo != null)
+          .map(t => ({
+            x: new Date(t.month).getTime(),
+            y: t.top_elo!,
+            label: `${WEIGHT_CLASS_ABBR[wc] ?? wc} · ${t.month.slice(0, 7)}: #1 ELO ${t.top_elo}`,
+          }))
+
+        if (top1Pts.length > 0) {
+          result.push({
+            id: `${wc}_top1`,
+            name: `${WEIGHT_CLASS_ABBR[wc] ?? wc} #1`,
+            color: DIVISION_COLORS[wc] ?? '#7a7065',
+            groupId: wc,
+            dashed: true,
+            points: rollingAvg(top1Pts, 3),
+          })
+        }
       }
-    })
-  }, [trends, visible])
+    }
+
+    return result
+  }, [trends, visible, showTop1])
 
   return (
     <div>
       {/* Division toggle buttons */}
-      <div className="flex flex-wrap gap-1.5 mb-6">
+      <div className="flex flex-wrap gap-1.5 mb-3">
         {divisions.map(wc => {
           const on = visible.has(wc)
           const color = DIVISION_COLORS[wc] ?? '#7a7065'
@@ -96,7 +124,29 @@ export default function TrendsChart({
         })}
       </div>
 
-      {series.length === 0 ? (
+      {/* Secondary toggle: show #1 ELO overlay */}
+      <div className="flex items-center gap-3 mb-5 border-t border-rule pt-3">
+        <button
+          onClick={() => setShowTop1(v => !v)}
+          className={[
+            'font-mono text-[10px] tracking-wider uppercase px-2.5 py-1',
+            'border rounded-sm transition-colors flex items-center gap-1.5',
+            showTop1
+              ? 'bg-ink text-paper border-ink'
+              : 'bg-transparent text-muted border-rule hover:border-ink hover:text-ink',
+          ].join(' ')}
+        >
+          <svg width={16} height={6} className="inline-block">
+            <line x1={0} y1={3} x2={16} y2={3} stroke="currentColor" strokeWidth={1.5} strokeDasharray="4 3" />
+          </svg>
+          Show #1 ELO
+        </button>
+        <span className="font-mono text-[9px] text-muted">
+          {showTop1 ? 'Dashed = highest-rated fighter · Solid = top-15 average' : 'Solid line = top-15 average ELO per division'}
+        </span>
+      </div>
+
+      {series.filter(s => !s.dashed).length === 0 ? (
         <p className="font-mono text-xs text-muted py-8 text-center">
           Select at least one division
         </p>

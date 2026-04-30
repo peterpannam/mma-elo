@@ -13,6 +13,8 @@ export interface ChartSeries {
   name: string
   color: string
   points: ChartPoint[]
+  dashed?: boolean
+  groupId?: string  // series with the same groupId highlight/fade together
 }
 
 export interface ChartAnnotation {
@@ -233,7 +235,9 @@ export default function LineChart({
         {series.map(s => {
           const svgPts = s.points.map(p => ({ x: toSvgX(p.x), y: toSvgY(p.y) }))
           const pathD = smoothPath(svgPts)
-          const isHovered = hoveredId === s.id
+          const group = s.groupId ?? s.id
+          const hoveredGroup = hoveredId ? (series.find(x => x.id === hoveredId)?.groupId ?? hoveredId) : null
+          const isHovered = hoveredGroup === group
           const isFaded = hoveredId !== null && !isHovered
           return (
             <g
@@ -244,20 +248,24 @@ export default function LineChart({
                 d={pathD}
                 fill="none"
                 stroke={s.color}
-                strokeWidth={isHovered ? 2.5 : 1.75}
+                strokeWidth={s.dashed ? 1 : (isHovered ? 2.5 : 1.75)}
                 strokeLinejoin="round"
                 strokeLinecap="round"
+                strokeDasharray={s.dashed ? '4 3' : undefined}
+                opacity={s.dashed ? 0.7 : 1}
               />
-              {/* Wider transparent stroke as hover hit area */}
-              <path
-                d={pathD}
-                fill="none"
-                stroke="transparent"
-                strokeWidth={14}
-                style={{ cursor: 'pointer' }}
-                onMouseEnter={() => setHoveredId(s.id)}
-                onMouseLeave={() => setHoveredId(null)}
-              />
+              {/* Wider transparent stroke as hover hit area — only on solid lines */}
+              {!s.dashed && (
+                <path
+                  d={pathD}
+                  fill="none"
+                  stroke="transparent"
+                  strokeWidth={14}
+                  style={{ cursor: 'pointer' }}
+                  onMouseEnter={() => setHoveredId(s.id)}
+                  onMouseLeave={() => setHoveredId(null)}
+                />
+              )}
             </g>
           )
         })}

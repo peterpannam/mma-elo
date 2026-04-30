@@ -100,7 +100,7 @@ export default async function TrendsPage() {
       <Kicker>Divisional Trends</Kicker>
       <SectionHeader>Average ELO Over Time</SectionHeader>
       <p className="font-mono text-xs text-muted mt-1 mb-8">
-        Monthly average ELO across all active fighters per division
+        Monthly average ELO across top fighters of each division
       </p>
 
       {fetchError ? (

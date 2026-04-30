@@ -264,7 +264,7 @@ export async function getDivisionTrends(weightClasses?: string[]): Promise<Divis
 
   while (true) {
     let query = supabase
-      .from('division_elo_trend')
+      .from('division_trend_top15')
       .select('*')
       .order('month')
       .range(from, from + PAGE - 1)

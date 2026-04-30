@@ -22,10 +22,15 @@ export default function AboutPage() {
           A number that tells the truth about a fighter.
         </h1>
         <p className="text-base leading-relaxed" style={{ fontFamily: 'var(--font-source-serif)' }}>
+          For time immemorial a debate has raged in the MMA community. Who is the GOAT?? Jon Jones, Georges St-Pierre, Khabib.
+          Look anywhere online and you will see these names thown around plus many more. This site aims to settle the debate for good.
           Official UFC rankings are decided by a panel. Panels have opinions, politics, and blind spots.
-          MMA ELO has none of those things — only outcomes. Win, and your number goes up.
+          MMA ELO has none of those things. Win, and your number goes up.
           Lose, and it goes down. Beat a highly-rated opponent, and it goes up a lot.
           Thirty years of fights, reduced to a single comparable figure per fighter per division.
+        </p>
+        <p>
+
         </p>
       </div>
 
@@ -43,14 +48,14 @@ export default function AboutPage() {
         <div className="space-y-5" style={{ fontFamily: 'var(--font-source-serif)', fontSize: 15, lineHeight: 1.75 }}>
           <p>
             ELO is a rating system originally developed for chess. Every fighter starts at a baseline
-            rating of 1500. After each fight, points transfer from loser to winner — how many depends
+            rating of 1500. After each fight, points transfer from loser to winner, how many depends
             on how surprising the result was. An underdog who wins gains more than a favourite who
             does the same.
           </p>
           <p>
             <strong style={{ fontFamily: 'var(--font-playfair)' }}>Divisional ratings are independent.</strong>{' '}
             A fighter who competes at both Lightweight and Welterweight has two completely separate ELO
-            scores — one per division. Moving up in weight doesn't carry your rating with you; you start
+            scores. Moving up in weight doesn't carry your rating with you; you start
             fresh at 1500 in the new division. This mirrors reality: being the best lightweight in the
             world tells you very little about how you'd fare against the best welterweights.
           </p>
@@ -59,12 +64,6 @@ export default function AboutPage() {
             The P4P rating runs across all weight classes and never resets. It answers a different
             question: not "who is the best in this division?" but "who is performing at the highest
             level, wherever they compete?"
-          </p>
-          <p>
-            <strong style={{ fontFamily: 'var(--font-playfair)' }}>The ledger is append-only.</strong>{' '}
-            Every fight produces a new row — nothing is ever overwritten. This means you can rewind to
-            any point in history: what did the Middleweight division look like in 2012? Who was the
-            top-rated Lightweight when Khabib retired? The data is all there.
           </p>
         </div>
       </section>
@@ -118,7 +117,7 @@ export default function AboutPage() {
             This project would not exist without{' '}
             <strong style={{ fontFamily: 'var(--font-playfair)' }}>Trevor Hicks</strong>, who built
             the original UFC ELO engine and shared it openly. The Python pipeline at the heart of
-            this site — the scraper, the ELO calculation logic, the fight-by-fight processing — is
+            this site. The scraper, the ELO calculation logic, the fight-by-fight processing its all
             built on his work.
           </p>
           <p className="mb-4">

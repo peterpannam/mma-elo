@@ -185,6 +185,8 @@ def refresh_active_status(db: Client) -> None:
     """Re-derive fighter active/inactive status from last fight date."""
     db.rpc("refresh_fighter_status").execute()
     log.info("Refreshed fighter active status")
+    db.rpc("refresh_division_trends").execute()
+    log.info("Refreshed division trend materialized view")
 
 
 def load(
