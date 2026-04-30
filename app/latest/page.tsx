@@ -60,7 +60,7 @@ export default async function LatestEventPage() {
         style={{ borderBottom: '2px solid #1a1612' }}
       >
         <div>
-          <Kicker>§ · The latest cycle</Kicker>
+          <Kicker>The most recent results</Kicker>
           <h1
             className="mt-1.5 leading-none"
             style={{ fontFamily: 'var(--font-playfair)', fontWeight: 900, fontSize: 'clamp(28px, 5vw, 40px)' }}

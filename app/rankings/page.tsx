@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getRankingsWithElo } from '@/lib/queries'
-import { Kicker, WEIGHT_CLASS_ABBR, WEIGHT_CLASSES } from '@/components/almanac/Atoms'
+import { Kicker, WEIGHT_CLASSES } from '@/components/almanac/Atoms'
 import DivisionPicker from '@/components/almanac/DivisionPicker'
 import type { CurrentElo } from '@/lib/types'
 
@@ -41,8 +41,6 @@ export default async function RankingsPage({
     fetchError = e?.message ?? 'Failed to load data'
   }
 
-  const wcAbbr = WEIGHT_CLASS_ABBR[wc] ?? wc
-
   return (
     <div>
       {/* Editorial header */}
@@ -55,9 +53,8 @@ export default async function RankingsPage({
           The official rankings against calculated ELO 
         </h1>
         <p className="text-sm text-muted italic mt-2" style={{ maxWidth: 720, fontFamily: 'var(--font-source-serif)' }}>
-          Two columns, one division. On the left: our ELO leaderboard, built from nothing but outcomes.
-          On the right: the promotion's official ranking, set by a panel. Lines connect where they agree;
-          gaps where they don't. <em>Reader, draw your own conclusions.</em>
+          Two columns, one division. On the right: our ELO leaderboard, built from nothing but outcomes.
+          On the left: the promotion's official ranking.
         </p>
       </div>
 
@@ -285,7 +282,7 @@ function SnubCallout({
         <strong style={{ fontFamily: 'var(--font-playfair)', fontWeight: 700 }}>The Snub List.</strong>{' '}
         Fighters marked{' '}
         <span className="font-mono text-[10px] tracking-wider" style={{ color: '#a82e1c' }}>UNRANKED ★</span>{' '}
-        have ELO scores higher than ranked contenders — but are absent from the official list. Our favourite rabbit-hole.
+        have ELO scores higher than ranked contenders, but are absent from the official list.
       </p>
       <div className="flex flex-wrap gap-3 mt-3">
         {snubs.map(r => (

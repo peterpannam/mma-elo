@@ -9,6 +9,7 @@ const TABS = [
   { href: '/rankings',    label: 'ELO vs Official' },
   { href: '/trends',      label: 'Division Trends' },
   { href: '/fighter',     label: 'Search & Compare' },
+  { href: '/about',       label: 'About' },
 ]
 
 export default function NavTabs() {
