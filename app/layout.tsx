@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Playfair_Display, JetBrains_Mono, Source_Serif_4 } from 'next/font/google'
 import './globals.css'
 import NavTabs from '@/components/almanac/NavTabs'
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const playfair = Playfair_Display({
   variable: '--font-playfair',
@@ -35,6 +36,7 @@ export const metadata: Metadata = {
     card: 'summary',
   },
 }
+
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -76,6 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               Data via UFCStats.com · Rankings via UFC.com · ELO calculated with K=40 base · <a className='underline' href='https://github.com/NBAtrev/UFC-Elo-Engine/blob/main/ufcstatswebscraper.py' target='_blank'>NBA trevs project</a> · <a className='underline' href='mailto:mma.elo.site@gmail.com' target='_blank'>Contact</a> 
             </p>
           </div>
+          <SpeedInsights/>
         </footer>
       </body>
     </html>
