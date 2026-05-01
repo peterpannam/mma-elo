@@ -1,0 +1,135 @@
+# .github/workflows/ufc_event_pipeline.yml
+# =============================================================
+# UFC ELO Ratings — Main Event Pipeline
+# =============================================================
+# Runs after each UFC event (manual trigger or weekly schedule).
+# Steps:
+#   1. Scrape fight results from UFCStats
+#   2. Compute ELO ratings & insert into Supabase
+#   3. Generate tweet drafts for the event
+#   4. Email a review notification with a link to the approval workflow
+#
+# The tweet drafts are stored in Supabase as 'pending'.
+# They are NOT posted automatically — use the approve_tweets workflow.
+# =============================================================
+
+name: UFC Event Pipeline
+
+on:
+  # ── Manual trigger (most common — run after confirming event data is live)
+  workflow_dispatch:
+    inputs:
+      event_name:
+        description: "Event name (e.g. 'UFC 312'). Leave blank to auto-detect."
+        required: false
+        type: string
+
+  # ── Weekly schedule: Sunday at 8am UTC (most UFC events are Saturday night US time)
+  # Uncomment once you're confident in the scraper reliability.
+  # schedule:
+  #   - cron: "0 8 * * 0"
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # JOB 1: Scrape & ELO
+  # Your existing pipeline — unchanged. Ends with new rows in
+  # events, fights, and elo_history.
+  # ─────────────────────────────────────────────────────────────
+  scrape_and_elo:
+    name: Scrape Results & Compute ELO
+    runs-on: ubuntu-latest
+    outputs:
+      event_id: ${{ steps.elo.outputs.event_id }}   # pass event UUID to downstream jobs
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Scrape & compute ELO
+        id: elo
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          cd pipeline && python run.py
+          EVENT_ID=$(python -c "import os; from supabase import create_client; sb = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_SERVICE_KEY']); r = sb.table('events').select('id').order('date', desc=True).limit(1).execute(); print(r.data[0]['id'])")
+          echo "event_id=$EVENT_ID" >> "$GITHUB_OUTPUT"
+          echo "Processed event: $EVENT_ID"
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 2: Generate Tweet Drafts
+  # Queries the DB for the just-processed event and writes
+  # formatted tweet content to the tweet_drafts table.
+  # ─────────────────────────────────────────────────────────────
+  generate_tweets:
+    name: Generate Tweet Drafts
+    runs-on: ubuntu-latest
+    needs: scrape_and_elo
+    outputs:
+      event_id: ${{ needs.scrape_and_elo.outputs.event_id }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install tweet dependencies
+        run: pip install supabase requests
+
+      - name: Generate tweet drafts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python twitter_automation/tweet_generator.py \
+            --event-id "${{ needs.scrape_and_elo.outputs.event_id }}"
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 3: Send Review Notification
+  # Emails a preview of all pending drafts with a link to
+  # trigger the approve_tweets workflow.
+  # ─────────────────────────────────────────────────────────────
+  notify_for_review:
+    name: Send Review Email
+    runs-on: ubuntu-latest
+    needs: generate_tweets
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install supabase requests
+
+      - name: Send review notification
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          NOTIFY_EMAIL_TO: ${{ secrets.NOTIFY_EMAIL_TO }}
+          NOTIFY_EMAIL_FROM: ${{ secrets.NOTIFY_EMAIL_FROM }}
+          NOTIFY_EMAIL_PASSWORD: ${{ secrets.NOTIFY_EMAIL_PASSWORD }}
+          GITHUB_REPO: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python twitter_automation/review_notifier.py \
+            --event-id "${{ needs.generate_tweets.outputs.event_id }}"
