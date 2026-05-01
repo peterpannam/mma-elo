@@ -87,7 +87,7 @@ export async function getFighterP4P(id: string): Promise<CurrentP4P | null> {
     .from('current_p4p')
     .select('*')
     .eq('fighter_id', id)
-    .single()
+    .maybeSingle()
   if (error) return null
   return data as CurrentP4P
 }

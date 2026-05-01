@@ -12,7 +12,7 @@ export async function generateMetadata({
 }: {
   searchParams: Promise<{ wc?: string; mode?: string }>
 }): Promise<Metadata> {
-  const { wc = 'Middleweight', mode } = await searchParams
+  const { wc = 'P4P', mode } = await searchParams
   const modeLabel = mode === 'all' ? 'All Time' : 'Active'
   const division = wc === 'P4P' ? 'Pound for Pound' : wc
   const title = `${division} ELO Rankings (${modeLabel})`
