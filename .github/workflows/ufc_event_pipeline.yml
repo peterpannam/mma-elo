@@ -26,8 +26,8 @@ on:
 
   # ── Weekly schedule: Sunday at 8am UTC (most UFC events are Saturday night US time)
   # Uncomment once you're confident in the scraper reliability.
-  # schedule:
-  #   - cron: "0 8 * * 0"
+  schedule:
+    - cron: "0 8 * * 0"
 
 jobs:
   # ─────────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           cd pipeline && python run.py
-          EVENT_ID=$(python -c "import os; from supabase import create_client; sb = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_SERVICE_KEY']); r = sb.table('events').select('id').order('date', desc=True).limit(1).execute(); print(r.data[0]['id'])")
+          EVENT_ID=$(python -c "import os; from supabase import create_client; sb = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_SERVICE_ROLE_KEY']); r = sb.table('events').select('id').order('date', desc=True).limit(1).execute(); print(r.data[0]['id'])")
           echo "event_id=$EVENT_ID" >> "$GITHUB_OUTPUT"
           echo "Processed event: $EVENT_ID"
 
