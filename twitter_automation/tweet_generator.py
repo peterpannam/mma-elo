@@ -119,9 +119,12 @@ def _safe_insert(supabase: Client, rows: list[dict]) -> None:
 # ── Data queries ──────────────────────────────────────────────────────────────
 
 def get_latest_event(supabase: Client) -> dict:
+    from datetime import date
+    today = date.today().isoformat()
     resp = (
         supabase.table("events")
         .select("id, name, date")
+        .lte("date", today)
         .order("date", desc=True)
         .limit(1)
         .execute()
