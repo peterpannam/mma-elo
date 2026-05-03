@@ -208,9 +208,19 @@ def post_thread(
             break
 
 
-def post_all_drafts(event_id: str, dry_run: bool = False, auto_approve: bool = False) -> None:
+def post_all_drafts(
+    event_id: str,
+    dry_run: bool = False,
+    auto_approve: bool = False,
+    skip_types: Optional[list[str]] = None,
+) -> None:
     """Main posting orchestrator."""
     drafts = get_drafts_to_post(event_id, auto_approve)
+
+    if skip_types:
+        before = len(drafts)
+        drafts = [d for d in drafts if d["tweet_type"] not in skip_types]
+        log.info("Skipping types %s — dropped %d draft(s).", skip_types, before - len(drafts))
 
     if not drafts:
         log.warning(
@@ -272,10 +282,16 @@ if __name__ == "__main__":
         action="store_true",
         help="Post 'pending' drafts without requiring manual approval. Use carefully.",
     )
+    parser.add_argument(
+        "--skip-types",
+        default="",
+        help="Comma-separated tweet types to skip (e.g. 'movers,upset').",
+    )
     args = parser.parse_args()
 
+    skip = [t.strip() for t in args.skip_types.split(",") if t.strip()]
     try:
-        post_all_drafts(args.event_id, dry_run=args.dry_run, auto_approve=args.auto_approve)
+        post_all_drafts(args.event_id, dry_run=args.dry_run, auto_approve=args.auto_approve, skip_types=skip or None)
         sys.exit(0)
     except Exception as e:
         log.exception("Failed to post tweets: %s", e)
