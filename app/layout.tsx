@@ -82,6 +82,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
           <SpeedInsights/>
           <Analytics/>
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-Q985P3CHJ5" strategy="afterInteractive" />
+        <Script id="gtag-init" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: `
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-Q985P3CHJ5');
+        `}} />
         </footer>
       </body>
     </html>
