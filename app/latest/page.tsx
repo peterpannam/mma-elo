@@ -13,6 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title,
     description,
+    alternates: { canonical: 'https://mma-elo.com/latest' },
     openGraph: { title: `${title} — The ELO Almanac`, description },
     twitter: { title: `${title} — The ELO Almanac`, description },
   }
@@ -39,6 +40,17 @@ export default async function LatestEventPage() {
   const { event, fights } = result
   const titleFights = fights.filter(f => f.is_title_fight).length
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SportsEvent',
+    name: event.name,
+    startDate: event.date,
+    ...(event.location && { location: { '@type': 'Place', name: event.location } }),
+    sport: 'Mixed Martial Arts',
+    organizer: { '@type': 'SportsOrganization', name: 'UFC' },
+    url: 'https://mma-elo.com/latest',
+  }
+
   const formattedDate = (() => {
     try {
       return new Date(event.date).toLocaleDateString('en-AU', {
@@ -54,6 +66,10 @@ export default async function LatestEventPage() {
 
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Event hero */}
       <div
         className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-6 items-end mb-6 pb-5"

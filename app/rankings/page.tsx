@@ -17,9 +17,13 @@ export async function generateMetadata({
   const { wc = 'Middleweight' } = await searchParams
   const title = `${wc}: ELO vs UFC Rankings`
   const description = `Compare official UFC ${wc} rankings against algorithmic ELO ratings. See which fighters are being snubbed.`
+  const canonicalParams = new URLSearchParams()
+  if (wc !== 'Middleweight') canonicalParams.set('wc', wc)
+  const qs = canonicalParams.toString()
   return {
     title,
     description,
+    alternates: { canonical: `https://mma-elo.com/rankings${qs ? `?${qs}` : ''}` },
     openGraph: { title: `${title} — The ELO Almanac`, description },
     twitter: { title: `${title} — The ELO Almanac`, description },
   }

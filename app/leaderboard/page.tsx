@@ -20,9 +20,14 @@ export async function generateMetadata({
     wc === 'P4P'
       ? `Career-spanning pound-for-pound ELO rankings for UFC fighters. ${modeLabel} fighters ranked algorithmically from 30 years of fight data.`
       : `${modeLabel} ELO rankings for UFC ${wc} fighters. Algorithmically ranked from 30 years of fight history.`
+  const canonicalParams = new URLSearchParams()
+  if (wc !== 'P4P') canonicalParams.set('wc', wc)
+  if (mode === 'all') canonicalParams.set('mode', 'all')
+  const qs = canonicalParams.toString()
   return {
     title,
     description,
+    alternates: { canonical: `https://mma-elo.com/leaderboard${qs ? `?${qs}` : ''}` },
     openGraph: { title: `${title} — The ELO Almanac`, description },
     twitter: { title: `${title} — The ELO Almanac`, description },
   }

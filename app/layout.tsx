@@ -25,6 +25,7 @@ const sourceSerif = Source_Serif_4({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://mma-elo.com'),
   title: {
     template: '%s — MMA ELO',
     default: 'MMA ELO',

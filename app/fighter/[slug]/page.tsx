@@ -1,13 +1,18 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getFighterBySlug, getFighterCurrentElos, getFighterHistory, getFighterP4P } from '@/lib/queries'
+import { getFighterBySlug, getFighterCurrentElos, getFighterHistory, getFighterP4P, getAllFighters } from '@/lib/queries'
 import { Kicker, Delta, MethodBadge, WEIGHT_CLASS_ABBR, FormDots, HairlineRule } from '@/components/almanac/Atoms'
 import LineChart from '@/components/almanac/LineChart'
 import type { ChartSeries } from '@/components/almanac/LineChart'
 import { DIVISION_COLORS } from '@/components/almanac/Atoms'
 
 export const revalidate = 3600
+
+export async function generateStaticParams() {
+  const fighters = await getAllFighters()
+  return fighters.filter(f => f.slug).map(f => ({ slug: f.slug }))
+}
 
 export async function generateMetadata({
   params,
@@ -22,8 +27,9 @@ export async function generateMetadata({
   return {
     title,
     description,
+    alternates: { canonical: `https://mma-elo.com/fighter/${slug}` },
     openGraph: { title: `${title} — The ELO Almanac`, description },
-    twitter: { title: `${title} — The ELO Almanac`, description },
+    twitter: { card: 'summary_large_image', title: `${title} — The ELO Almanac`, description },
   }
 }
 
@@ -109,8 +115,23 @@ export default async function FighterProfilePage({
   }
   const fmtReach = (cm: number) => `${Math.round(cm / 2.54)}" (${Math.round(cm)} cm)`
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: fighter.name,
+    url: `https://mma-elo.com/fighter/${fighter.slug}`,
+    ...(fighter.nationality && { nationality: fighter.nationality }),
+    ...(fighter.date_of_birth && { birthDate: fighter.date_of_birth }),
+    sport: 'Mixed Martial Arts',
+    memberOf: { '@type': 'SportsOrganization', name: 'UFC' },
+  }
+
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="mb-8">
         <Kicker>Fighter Profile</Kicker>
         <h1
