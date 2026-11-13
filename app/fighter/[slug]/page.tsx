@@ -1,17 +1,22 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getFighterBySlug, getFighterCurrentElos, getFighterHistory, getFighterP4P, getAllFighters } from '@/lib/queries'
+import { getFighterBySlug, getFighterCurrentElos, getFighterHistory, getFighterP4P } from '@/lib/queries'
 import { Kicker, Delta, MethodBadge, WEIGHT_CLASS_ABBR, FormDots, HairlineRule } from '@/components/almanac/Atoms'
 import LineChart from '@/components/almanac/LineChart'
 import type { ChartSeries } from '@/components/almanac/LineChart'
 import { DIVISION_COLORS } from '@/components/almanac/Atoms'
 
-export const revalidate = 3600
+// Data only changes when the weekly pipeline runs, and the pipeline calls
+// /api/revalidate afterwards — so a long fallback keeps ISR writes low.
+// Fighter pages are ~120 KB; hourly regeneration across thousands of
+// fighters (driven by crawler traffic) blew through the ISR write quota.
+export const revalidate = 604800 // 7 days
 
+// Empty list = render each fighter on first request, then cache. Prerendering
+// every fighter at build time wrote ~1,000 pages to the ISR cache per deploy.
 export async function generateStaticParams() {
-  const fighters = await getAllFighters()
-  return fighters.filter(f => f.slug).map(f => ({ slug: f.slug }))
+  return []
 }
 
 export async function generateMetadata({

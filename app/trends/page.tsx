@@ -6,7 +6,7 @@ import DivisionStatsTable from '@/components/almanac/DivisionStatsTable'
 import type { DivisionRow, YearRow } from '@/components/almanac/DivisionStatsTable'
 import type { DivisionTrend, TitleFight } from '@/lib/types'
 
-export const revalidate = 3600
+export const revalidate = 86400 // daily fallback; pipeline triggers /api/revalidate after each run
 
 export const metadata: Metadata = {
   title: 'Division Trends',

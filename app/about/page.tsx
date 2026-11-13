@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Kicker } from '@/components/almanac/Atoms'
 
-export const revalidate = 3600
+export const revalidate = 86400 // daily fallback; pipeline triggers /api/revalidate after each run
 
 export const metadata: Metadata = {
   title: 'About',

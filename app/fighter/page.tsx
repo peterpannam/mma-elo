@@ -7,7 +7,7 @@ import type { ChartSeries } from '@/components/almanac/LineChart'
 import FighterPicker from '@/components/almanac/FighterPicker'
 import CompareDivisionPicker from '@/components/almanac/CompareDivisionPicker'
 
-export const revalidate = 3600
+export const revalidate = 86400 // daily fallback; pipeline triggers /api/revalidate after each run
 
 const COLOR_A = '#a82e1c'
 const COLOR_B = '#5c7ba8'

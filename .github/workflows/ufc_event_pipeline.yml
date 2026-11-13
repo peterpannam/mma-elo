@@ -74,6 +74,16 @@ jobs:
           echo "event_id=$EVENT_ID" >> "$GITHUB_OUTPUT"
           echo "Processed event: $EVENT_ID"
 
+      - name: Refresh website cache
+        env:
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+        run: |
+          if [ -z "$REVALIDATE_SECRET" ]; then
+            echo "::warning::REVALIDATE_SECRET not set — site will update when its cache expires (up to 7 days)"
+            exit 0
+          fi
+          curl -fsS -X POST https://mma-elo.com/api/revalidate -H "x-revalidate-secret: $REVALIDATE_SECRET"
+
   # ─────────────────────────────────────────────────────────────
   # JOB 2: Generate Tweet Drafts
   # Queries the DB for the just-processed event and writes
