@@ -157,3 +157,186 @@
 2026-04-25 10:48:51,903 INFO ELO calculated for 18 fights
 2026-04-25 10:48:51,906 INFO ELO calculated for 18 fights
 2026-04-25 10:48:51,906 INFO === Weekly run complete ===
+2026-11-13 21:20:44,760 INFO === Weekly run started (DRY RUN) ===
+2026-11-13 21:20:45,363 INFO Step 1/5: Fetching new events from Greco1899/scrape_ufc_stats...
+2026-11-13 21:20:48,011 INFO Downloaded ufc_event_details.csv (796 rows)
+2026-11-13 21:20:48,488 INFO Downloaded ufc_fight_results.csv (9015 rows)
+2026-11-13 21:20:48,902 INFO Downloaded ufc_fighter_details.csv (4628 rows)
+2026-11-13 21:20:49,316 INFO Downloaded ufc_fighter_tott.csv (4629 rows)
+2026-11-13 21:20:50,069 INFO New since last run: 22 events, 276 fights, 55 new fighters (source newest event: 2026-11-07)
+2026-11-13 21:20:50,070 INFO   2026-06-06  UFC Fight Night: Muhammad vs. Bonfim  (12 fights)
+2026-11-13 21:20:50,070 INFO   2026-06-14  UFC Freedom 250  (7 fights)
+2026-11-13 21:20:50,070 INFO   2026-06-20  UFC Fight Night: Kape vs. Horiguchi  (12 fights)
+2026-11-13 21:20:50,070 INFO   2026-06-27  UFC Fight Night: Fiziev vs. Torres  (13 fights)
+2026-11-13 21:20:50,071 INFO   2026-07-11  UFC 329: McGregor vs. Holloway 2  (14 fights)
+2026-11-13 21:20:50,071 INFO   2026-07-18  UFC Fight Night: Du Plessis vs. Usman  (12 fights)
+2026-11-13 21:20:50,071 INFO   2026-07-25  UFC Fight Night: Ankalaev vs. Guskov  (12 fights)
+2026-11-13 21:20:50,071 INFO   2026-08-01  UFC Fight Night: Medic vs. Rodriguez  (14 fights)
+2026-11-13 21:20:50,072 INFO   2026-08-08  UFC Fight Night: Gamrot vs. Salkilld  (12 fights)
+2026-11-13 21:20:50,072 INFO   2026-08-15  UFC 330: Makhachev vs. Machado Garry  (12 fights)
+2026-11-13 21:20:50,072 INFO   2026-08-22  UFC Fight Night: Hernandez vs. Rodrigues  (13 fights)
+2026-11-13 21:20:50,072 INFO   2026-08-29  UFC Fight Night: Nurmagomedov vs. Song  (13 fights)
+2026-11-13 21:20:50,072 INFO   2026-09-05  UFC Fight Night: Hooker vs. Parnasse  (14 fights)
+2026-11-13 21:20:50,073 INFO   2026-09-12  Noche UFC: Silva vs. Delgado  (13 fights)
+2026-11-13 21:20:50,073 INFO   2026-09-19  UFC 331: Van vs. Pantoja 2  (12 fights)
+2026-11-13 21:20:50,073 INFO   2026-09-26  UFC Fight Night: Rosas Jr. vs. Barcelos  (12 fights)
+2026-11-13 21:20:50,073 INFO   2026-10-03  UFC 332: Silva vs. Wang  (14 fights)
+2026-11-13 21:20:50,073 INFO   2026-10-10  UFC Fight Night: Allen vs. Duncan  (12 fights)
+2026-11-13 21:20:50,074 INFO   2026-10-17  UFC Fight Night: Buckley vs. Malott  (13 fights)
+2026-11-13 21:20:50,074 INFO   2026-10-24  UFC 333: Volkanovski vs. Evloev  (14 fights)
+2026-11-13 21:20:50,074 INFO   2026-10-31  UFC Fight Night: Moicano vs. Nolan  (12 fights)
+2026-11-13 21:20:50,074 INFO   2026-11-07  UFC Fight Night: Cortes Acosta vs. Walker  (14 fights)
+2026-11-13 21:20:50,074 INFO Step 2/5: Transforming to schema...
+2026-11-13 21:20:50,102 INFO Parsed 55 fighters, 22 events, 276 fights
+2026-11-13 21:20:50,268 INFO Freshness: newest event in DB = 2026-11-07, in source = 2026-11-07, threshold = 21 days
+2026-11-13 21:20:50,268 INFO === Dry run complete — nothing written ===
+2026-11-13 21:21:12,473 INFO === Weekly run started (DRY RUN) ===
+2026-11-13 21:21:12,942 INFO Step 1/5: Fetching new events from Greco1899/scrape_ufc_stats...
+2026-11-13 21:21:16,076 INFO Downloaded ufc_event_details.csv (796 rows)
+2026-11-13 21:21:16,556 INFO Downloaded ufc_fight_results.csv (9015 rows)
+2026-11-13 21:21:16,989 INFO Downloaded ufc_fighter_details.csv (4628 rows)
+2026-11-13 21:21:17,429 INFO Downloaded ufc_fighter_tott.csv (4629 rows)
+2026-11-13 21:21:18,190 INFO New since last run: 23 events, 289 fights, 55 new fighters (source newest event: 2026-11-07)
+2026-11-13 21:21:18,190 INFO   2026-05-30  UFC Fight Night: Song vs. Figueiredo  (13 fights)
+2026-11-13 21:21:18,191 INFO   2026-06-06  UFC Fight Night: Muhammad vs. Bonfim  (12 fights)
+2026-11-13 21:21:18,191 INFO   2026-06-14  UFC Freedom 250  (7 fights)
+2026-11-13 21:21:18,191 INFO   2026-06-20  UFC Fight Night: Kape vs. Horiguchi  (12 fights)
+2026-11-13 21:21:18,191 INFO   2026-06-27  UFC Fight Night: Fiziev vs. Torres  (13 fights)
+2026-11-13 21:21:18,192 INFO   2026-07-11  UFC 329: McGregor vs. Holloway 2  (14 fights)
+2026-11-13 21:21:18,192 INFO   2026-07-18  UFC Fight Night: Du Plessis vs. Usman  (12 fights)
+2026-11-13 21:21:18,192 INFO   2026-07-25  UFC Fight Night: Ankalaev vs. Guskov  (12 fights)
+2026-11-13 21:21:18,192 INFO   2026-08-01  UFC Fight Night: Medic vs. Rodriguez  (14 fights)
+2026-11-13 21:21:18,192 INFO   2026-08-08  UFC Fight Night: Gamrot vs. Salkilld  (12 fights)
+2026-11-13 21:21:18,193 INFO   2026-08-15  UFC 330: Makhachev vs. Machado Garry  (12 fights)
+2026-11-13 21:21:18,193 INFO   2026-08-22  UFC Fight Night: Hernandez vs. Rodrigues  (13 fights)
+2026-11-13 21:21:18,193 INFO   2026-08-29  UFC Fight Night: Nurmagomedov vs. Song  (13 fights)
+2026-11-13 21:21:18,193 INFO   2026-09-05  UFC Fight Night: Hooker vs. Parnasse  (14 fights)
+2026-11-13 21:21:18,193 INFO   2026-09-12  Noche UFC: Silva vs. Delgado  (13 fights)
+2026-11-13 21:21:18,194 INFO   2026-09-19  UFC 331: Van vs. Pantoja 2  (12 fights)
+2026-11-13 21:21:18,194 INFO   2026-09-26  UFC Fight Night: Rosas Jr. vs. Barcelos  (12 fights)
+2026-11-13 21:21:18,194 INFO   2026-10-03  UFC 332: Silva vs. Wang  (14 fights)
+2026-11-13 21:21:18,194 INFO   2026-10-10  UFC Fight Night: Allen vs. Duncan  (12 fights)
+2026-11-13 21:21:18,195 INFO   2026-10-17  UFC Fight Night: Buckley vs. Malott  (13 fights)
+2026-11-13 21:21:18,195 INFO   2026-10-24  UFC 333: Volkanovski vs. Evloev  (14 fights)
+2026-11-13 21:21:18,195 INFO   2026-10-31  UFC Fight Night: Moicano vs. Nolan  (12 fights)
+2026-11-13 21:21:18,195 INFO   2026-11-07  UFC Fight Night: Cortes Acosta vs. Walker  (14 fights)
+2026-11-13 21:21:18,195 INFO Step 2/5: Transforming to schema...
+2026-11-13 21:21:18,223 INFO Parsed 55 fighters, 23 events, 289 fights
+2026-11-13 21:21:18,384 INFO Freshness: newest event in DB = 2026-11-07, in source = 2026-11-07, threshold = 21 days
+2026-11-13 21:21:18,384 INFO === Dry run complete — nothing written ===
+2026-11-13 21:21:32,829 INFO === Weekly run started (DRY RUN) ===
+2026-11-13 21:21:33,284 INFO Step 1/5: Fetching new events from Greco1899/scrape_ufc_stats...
+2026-11-13 21:21:36,503 INFO Downloaded ufc_event_details.csv (796 rows)
+2026-11-13 21:21:36,995 INFO Downloaded ufc_fight_results.csv (9015 rows)
+2026-11-13 21:21:37,436 INFO Downloaded ufc_fighter_details.csv (4628 rows)
+2026-11-13 21:21:37,870 INFO Downloaded ufc_fighter_tott.csv (4629 rows)
+2026-11-13 21:21:38,630 INFO New since last run: 23 events, 289 fights, 55 new fighters (source newest event: 2026-11-07)
+2026-11-13 21:21:38,631 INFO   2026-05-30  UFC Fight Night: Song vs. Figueiredo  (13 fights)
+2026-11-13 21:21:38,631 INFO   2026-06-06  UFC Fight Night: Muhammad vs. Bonfim  (12 fights)
+2026-11-13 21:21:38,631 INFO   2026-06-14  UFC Freedom 250  (7 fights)
+2026-11-13 21:21:38,631 INFO   2026-06-20  UFC Fight Night: Kape vs. Horiguchi  (12 fights)
+2026-11-13 21:21:38,631 INFO   2026-06-27  UFC Fight Night: Fiziev vs. Torres  (13 fights)
+2026-11-13 21:21:38,632 INFO   2026-07-11  UFC 329: McGregor vs. Holloway 2  (14 fights)
+2026-11-13 21:21:38,632 INFO   2026-07-18  UFC Fight Night: Du Plessis vs. Usman  (12 fights)
+2026-11-13 21:21:38,632 INFO   2026-07-25  UFC Fight Night: Ankalaev vs. Guskov  (12 fights)
+2026-11-13 21:21:38,632 INFO   2026-08-01  UFC Fight Night: Medic vs. Rodriguez  (14 fights)
+2026-11-13 21:21:38,633 INFO   2026-08-08  UFC Fight Night: Gamrot vs. Salkilld  (12 fights)
+2026-11-13 21:21:38,633 INFO   2026-08-15  UFC 330: Makhachev vs. Machado Garry  (12 fights)
+2026-11-13 21:21:38,633 INFO   2026-08-22  UFC Fight Night: Hernandez vs. Rodrigues  (13 fights)
+2026-11-13 21:21:38,633 INFO   2026-08-29  UFC Fight Night: Nurmagomedov vs. Song  (13 fights)
+2026-11-13 21:21:38,633 INFO   2026-09-05  UFC Fight Night: Hooker vs. Parnasse  (14 fights)
+2026-11-13 21:21:38,634 INFO   2026-09-12  Noche UFC: Silva vs. Delgado  (13 fights)
+2026-11-13 21:21:38,634 INFO   2026-09-19  UFC 331: Van vs. Pantoja 2  (12 fights)
+2026-11-13 21:21:38,634 INFO   2026-09-26  UFC Fight Night: Rosas Jr. vs. Barcelos  (12 fights)
+2026-11-13 21:21:38,634 INFO   2026-10-03  UFC 332: Silva vs. Wang  (14 fights)
+2026-11-13 21:21:38,635 INFO   2026-10-10  UFC Fight Night: Allen vs. Duncan  (12 fights)
+2026-11-13 21:21:38,635 INFO   2026-10-17  UFC Fight Night: Buckley vs. Malott  (13 fights)
+2026-11-13 21:21:38,635 INFO   2026-10-24  UFC 333: Volkanovski vs. Evloev  (14 fights)
+2026-11-13 21:21:38,635 INFO   2026-10-31  UFC Fight Night: Moicano vs. Nolan  (12 fights)
+2026-11-13 21:21:38,635 INFO   2026-11-07  UFC Fight Night: Cortes Acosta vs. Walker  (14 fights)
+2026-11-13 21:21:38,635 INFO Step 2/5: Transforming to schema...
+2026-11-13 21:21:38,662 INFO Parsed 55 fighters, 23 events, 289 fights
+2026-11-13 21:21:38,839 INFO Freshness: newest event in DB = 2026-11-07, in source = 2026-11-07, threshold = 1 days
+2026-11-13 21:21:38,839 ERROR STALE DATA: the data source's newest event is 2026-11-07 (more than 1 days ago). Greco1899/scrape_ufc_stats may have stopped updating — check https://github.com/Greco1899/scrape_ufc_stats/commits/main
+2026-11-13 21:21:38,839 INFO === Dry run complete — nothing written ===
+2026-11-13 21:25:50,736 INFO === Weekly run started (DRY RUN) ===
+2026-11-13 21:25:51,229 INFO Step 1/5: Fetching new events from Greco1899/scrape_ufc_stats...
+2026-11-13 21:25:55,365 INFO Downloaded ufc_event_details.csv (796 rows)
+2026-11-13 21:25:56,054 INFO Downloaded ufc_fight_results.csv (9015 rows)
+2026-11-13 21:25:56,733 INFO Downloaded ufc_fighter_details.csv (4628 rows)
+2026-11-13 21:25:57,363 INFO Downloaded ufc_fighter_tott.csv (4629 rows)
+2026-11-13 21:25:58,117 INFO New since last run: 23 events, 289 fights, 55 new fighters (source newest event: 2026-11-07)
+2026-11-13 21:25:58,118 INFO   2026-05-30  UFC Fight Night: Song vs. Figueiredo  (13 fights)
+2026-11-13 21:25:58,118 INFO   2026-06-06  UFC Fight Night: Muhammad vs. Bonfim  (12 fights)
+2026-11-13 21:25:58,118 INFO   2026-06-14  UFC Freedom 250  (7 fights)
+2026-11-13 21:25:58,119 INFO   2026-06-20  UFC Fight Night: Kape vs. Horiguchi  (12 fights)
+2026-11-13 21:25:58,119 INFO   2026-06-27  UFC Fight Night: Fiziev vs. Torres  (13 fights)
+2026-11-13 21:25:58,119 INFO   2026-07-11  UFC 329: McGregor vs. Holloway 2  (14 fights)
+2026-11-13 21:25:58,119 INFO   2026-07-18  UFC Fight Night: Du Plessis vs. Usman  (12 fights)
+2026-11-13 21:25:58,120 INFO   2026-07-25  UFC Fight Night: Ankalaev vs. Guskov  (12 fights)
+2026-11-13 21:25:58,120 INFO   2026-08-01  UFC Fight Night: Medic vs. Rodriguez  (14 fights)
+2026-11-13 21:25:58,120 INFO   2026-08-08  UFC Fight Night: Gamrot vs. Salkilld  (12 fights)
+2026-11-13 21:25:58,121 INFO   2026-08-15  UFC 330: Makhachev vs. Machado Garry  (12 fights)
+2026-11-13 21:25:58,121 INFO   2026-08-22  UFC Fight Night: Hernandez vs. Rodrigues  (13 fights)
+2026-11-13 21:25:58,121 INFO   2026-08-29  UFC Fight Night: Nurmagomedov vs. Song  (13 fights)
+2026-11-13 21:25:58,122 INFO   2026-09-05  UFC Fight Night: Hooker vs. Parnasse  (14 fights)
+2026-11-13 21:25:58,122 INFO   2026-09-12  Noche UFC: Silva vs. Delgado  (13 fights)
+2026-11-13 21:25:58,122 INFO   2026-09-19  UFC 331: Van vs. Pantoja 2  (12 fights)
+2026-11-13 21:25:58,122 INFO   2026-09-26  UFC Fight Night: Rosas Jr. vs. Barcelos  (12 fights)
+2026-11-13 21:25:58,123 INFO   2026-10-03  UFC 332: Silva vs. Wang  (14 fights)
+2026-11-13 21:25:58,123 INFO   2026-10-10  UFC Fight Night: Allen vs. Duncan  (12 fights)
+2026-11-13 21:25:58,123 INFO   2026-10-17  UFC Fight Night: Buckley vs. Malott  (13 fights)
+2026-11-13 21:25:58,123 INFO   2026-10-24  UFC 333: Volkanovski vs. Evloev  (14 fights)
+2026-11-13 21:25:58,124 INFO   2026-10-31  UFC Fight Night: Moicano vs. Nolan  (12 fights)
+2026-11-13 21:25:58,124 INFO   2026-11-07  UFC Fight Night: Cortes Acosta vs. Walker  (14 fights)
+2026-11-13 21:25:58,124 INFO Step 2/5: Transforming to schema...
+2026-11-13 21:25:58,152 INFO Parsed 55 fighters, 23 events, 289 fights
+2026-11-13 21:25:58,300 INFO Freshness: newest event in DB = 2026-11-07, in source = 2026-11-07, threshold = 21 days
+2026-11-13 21:25:58,301 INFO === Dry run complete — nothing written ===
+2026-11-13 21:26:19,757 INFO === Weekly run started ===
+2026-11-13 21:26:20,208 INFO Step 1/5: Fetching new events from Greco1899/scrape_ufc_stats...
+2026-11-13 21:26:23,273 INFO Downloaded ufc_event_details.csv (796 rows)
+2026-11-13 21:26:23,767 INFO Downloaded ufc_fight_results.csv (9015 rows)
+2026-11-13 21:26:24,179 INFO Downloaded ufc_fighter_details.csv (4628 rows)
+2026-11-13 21:26:24,589 INFO Downloaded ufc_fighter_tott.csv (4629 rows)
+2026-11-13 21:26:25,342 INFO New since last run: 23 events, 289 fights, 55 new fighters (source newest event: 2026-11-07)
+2026-11-13 21:26:25,342 INFO   2026-05-30  UFC Fight Night: Song vs. Figueiredo  (13 fights)
+2026-11-13 21:26:25,343 INFO   2026-06-06  UFC Fight Night: Muhammad vs. Bonfim  (12 fights)
+2026-11-13 21:26:25,343 INFO   2026-06-14  UFC Freedom 250  (7 fights)
+2026-11-13 21:26:25,343 INFO   2026-06-20  UFC Fight Night: Kape vs. Horiguchi  (12 fights)
+2026-11-13 21:26:25,344 INFO   2026-06-27  UFC Fight Night: Fiziev vs. Torres  (13 fights)
+2026-11-13 21:26:25,344 INFO   2026-07-11  UFC 329: McGregor vs. Holloway 2  (14 fights)
+2026-11-13 21:26:25,344 INFO   2026-07-18  UFC Fight Night: Du Plessis vs. Usman  (12 fights)
+2026-11-13 21:26:25,344 INFO   2026-07-25  UFC Fight Night: Ankalaev vs. Guskov  (12 fights)
+2026-11-13 21:26:25,345 INFO   2026-08-01  UFC Fight Night: Medic vs. Rodriguez  (14 fights)
+2026-11-13 21:26:25,345 INFO   2026-08-08  UFC Fight Night: Gamrot vs. Salkilld  (12 fights)
+2026-11-13 21:26:25,345 INFO   2026-08-15  UFC 330: Makhachev vs. Machado Garry  (12 fights)
+2026-11-13 21:26:25,346 INFO   2026-08-22  UFC Fight Night: Hernandez vs. Rodrigues  (13 fights)
+2026-11-13 21:26:25,346 INFO   2026-08-29  UFC Fight Night: Nurmagomedov vs. Song  (13 fights)
+2026-11-13 21:26:25,346 INFO   2026-09-05  UFC Fight Night: Hooker vs. Parnasse  (14 fights)
+2026-11-13 21:26:25,346 INFO   2026-09-12  Noche UFC: Silva vs. Delgado  (13 fights)
+2026-11-13 21:26:25,347 INFO   2026-09-19  UFC 331: Van vs. Pantoja 2  (12 fights)
+2026-11-13 21:26:25,347 INFO   2026-09-26  UFC Fight Night: Rosas Jr. vs. Barcelos  (12 fights)
+2026-11-13 21:26:25,347 INFO   2026-10-03  UFC 332: Silva vs. Wang  (14 fights)
+2026-11-13 21:26:25,347 INFO   2026-10-10  UFC Fight Night: Allen vs. Duncan  (12 fights)
+2026-11-13 21:26:25,347 INFO   2026-10-17  UFC Fight Night: Buckley vs. Malott  (13 fights)
+2026-11-13 21:26:25,348 INFO   2026-10-24  UFC 333: Volkanovski vs. Evloev  (14 fights)
+2026-11-13 21:26:25,348 INFO   2026-10-31  UFC Fight Night: Moicano vs. Nolan  (12 fights)
+2026-11-13 21:26:25,348 INFO   2026-11-07  UFC Fight Night: Cortes Acosta vs. Walker  (14 fights)
+2026-11-13 21:26:25,349 INFO Step 2/5: Transforming to schema...
+2026-11-13 21:26:25,376 INFO Parsed 55 fighters, 23 events, 289 fights
+2026-11-13 21:26:25,497 INFO Step 3/5: Loading into Supabase...
+2026-11-13 21:26:25,703 INFO Upserted 55 fighters
+2026-11-13 21:26:26,952 INFO Upserted 23 events
+2026-11-13 21:26:27,777 INFO Upserted 289 fights, skipped 0
+2026-11-13 21:26:27,998 INFO Refreshed fighter active status
+2026-11-13 21:26:32,062 INFO Refreshed division trend materialized view
+2026-11-13 21:26:32,062 INFO Step 4/5: Calculating ELO history...
+2026-11-13 21:26:42,383 INFO ELO calculated for 289 fights
+2026-11-13 21:26:42,386 INFO ELO calculated for 289 fights
+2026-11-13 21:26:42,387 INFO Step 5/5: Updating rankings from UFC.com...
+2026-11-13 21:26:42,920 INFO Scraped 219 ranking entries from UFC.com
+2026-11-13 21:26:44,398 INFO Rankings: 41 inserted, 40 closed, 0 unmatched
+2026-11-13 21:26:44,399 INFO Rankings: 41 new, 40 closed, 0 unmatched
+2026-11-13 21:26:44,547 INFO Freshness: newest event in DB = 2026-11-07, in source = 2026-11-07, threshold = 21 days
+2026-11-13 21:26:44,547 INFO === Weekly run complete ===
