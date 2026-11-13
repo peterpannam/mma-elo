@@ -23,6 +23,11 @@ on:
         description: "Event name (e.g. 'UFC 312'). Leave blank to auto-detect."
         required: false
         type: string
+      dry_run:
+        description: "Dry run — fetch and report new events only; no DB writes, tweets or emails"
+        required: false
+        type: boolean
+        default: false
 
   # ── Weekly schedule: Sunday at 8am UTC (most UFC events are Saturday night US time)
   # Uncomment once you're confident in the scraper reliability.
@@ -60,6 +65,10 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            cd pipeline && python run.py --dry-run
+            exit 0
+          fi
           cd pipeline && python run.py
           EVENT_ID=$(python -c "import os; from datetime import date; from supabase import create_client; sb = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_SERVICE_ROLE_KEY']); r = sb.table('events').select('id').lte('date', date.today().isoformat()).order('date', desc=True).limit(1).execute(); print(r.data[0]['id'])")
           echo "event_id=$EVENT_ID" >> "$GITHUB_OUTPUT"
@@ -74,6 +83,7 @@ jobs:
     name: Generate Tweet Drafts
     runs-on: ubuntu-latest
     needs: scrape_and_elo
+    if: ${{ inputs.dry_run != true }}
     outputs:
       event_id: ${{ needs.scrape_and_elo.outputs.event_id }}
 
@@ -133,3 +143,31 @@ jobs:
         run: |
           python twitter_automation/review_notifier.py \
             --event-id "${{ needs.generate_tweets.outputs.event_id }}"
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 4: Failure Alert
+  # Emails you if any job above fails — e.g. the data source went
+  # stale (no new event in 21+ days) or a fighter name couldn't be
+  # matched. Added after the May–Nov 2026 outage, where UFCStats
+  # blocked the scraper but every run still reported success.
+  # ─────────────────────────────────────────────────────────────
+  alert_on_failure:
+    name: Email Failure Alert
+    runs-on: ubuntu-latest
+    needs: [scrape_and_elo, generate_tweets, notify_for_review]
+    if: ${{ failure() }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Send failure email
+        env:
+          NOTIFY_EMAIL_TO: ${{ secrets.NOTIFY_EMAIL_TO }}
+          NOTIFY_EMAIL_FROM: ${{ secrets.NOTIFY_EMAIL_FROM }}
+          NOTIFY_EMAIL_PASSWORD: ${{ secrets.NOTIFY_EMAIL_PASSWORD }}
+          FAILED_JOBS: >-
+            ${{ needs.scrape_and_elo.result == 'failure' && 'Scrape Results & Compute ELO' || '' }}
+            ${{ needs.generate_tweets.result == 'failure' && 'Generate Tweet Drafts' || '' }}
+            ${{ needs.notify_for_review.result == 'failure' && 'Send Review Email' || '' }}
+        run: python pipeline/notify_failure.py

@@ -43,3 +43,5 @@ next-env.d.ts
 CLAUDE.md
 AGENTS.md
 .claude
+# Greco1899 CSV download cache (re-downloaded every pipeline run)
+pipeline/data/greco/
