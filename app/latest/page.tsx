@@ -3,7 +3,7 @@ import { getLatestEvent } from '@/lib/queries'
 import { Kicker } from '@/components/almanac/Atoms'
 import LatestEventClient from '@/components/almanac/LatestEventClient'
 
-export const revalidate = 3600
+export const revalidate = 86400 // daily fallback; pipeline triggers /api/revalidate after each run
 
 export async function generateMetadata(): Promise<Metadata> {
   const result = await getLatestEvent()

@@ -1,6 +1,8 @@
 import { ImageResponse } from 'next/og'
 import { getFighterBySlug, getFighterCurrentElos, getFighterP4P } from '@/lib/queries'
 
+export const revalidate = 604800 // 7 days — see app/fighter/[slug]/page.tsx
+
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
